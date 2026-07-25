@@ -70,28 +70,56 @@ async function verifyTransaction({ paymentReference }) {
     throw new Error('Paystack credentials are not configured.');
   }
 
+  logger.info(`Verifying Paystack transaction: ${paymentReference}`);
+
   const response = await fetch(
     `${PAYSTACK_BASE_URL}/transaction/verify/${encodeURIComponent(paymentReference)}`,
     {
       method: 'GET',
-      headers: { Authorization: `Bearer ${config.paystack.secretKey}` },
+      headers: {
+        Authorization: `Bearer ${config.paystack.secretKey}`,
+        'Content-Type': 'application/json',
+      },
     }
   );
 
-  const data = await response.json().catch(() => ({}));
+  const rawResponse = await response.text();
+
+  let data = {};
+
+  try {
+    data = JSON.parse(rawResponse);
+  } catch (err) {
+    logger.error(
+      'Paystack returned non-JSON response:',
+      rawResponse
+    );
+  }
 
   if (!response.ok || data.status !== true) {
-    logger.error('Paystack transaction verify failed', response.status, data);
-    return { verified: false, status: 'error', amount: null };
+    logger.error(
+      'Paystack verification failed:',
+      response.status,
+      JSON.stringify(data)
+    );
+
+    return {
+      verified: false,
+      status: 'error',
+      amount: null,
+      raw: data,
+    };
   }
 
   const tx = data.data || {};
-  const verified = tx.status === 'success';
 
   return {
-    verified,
+    verified: tx.status === 'success',
     status: tx.status,
-    amount: typeof tx.amount === 'number' ? tx.amount / 100 : null, // convert back to GHS
+    amount:
+      typeof tx.amount === 'number'
+        ? tx.amount / 100
+        : null,
     raw: tx,
   };
 }
