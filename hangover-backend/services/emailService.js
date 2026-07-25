@@ -36,7 +36,7 @@ function confirmationHtml(booking) {
       <tr><td style="padding:6px 0;color:#a79e96;">Table</td><td style="padding:6px 0;">${booking.table_number || 'N/A'} (${booking.table_package || 'N/A'})</td></tr>
       <tr><td style="padding:6px 0;color:#a79e96;">Amount Paid</td><td style="padding:6px 0;">GHS ${Number(booking.amount_paid).toFixed(2)}</td></tr>
     </table>
-    <p style="margin-top:24px;color:#a79e96;font-size:13px;">Sat, 30 Aug 2026 · 9:00 PM — Till Sunrise · The Grand Terrace, Accra</p>
+    <p style="margin-top:24px;color:#a79e96;font-size:13px;">Fri, 11th Sept 2026 · 9:00 PM — Till Sunrise · Pera lounge East legon, Accra</p>
     <p style="color:#a79e96;font-size:12px;">Present your ticket (digital or printed) at entry.</p>
   </div>`;
 }

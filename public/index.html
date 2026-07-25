@@ -462,8 +462,8 @@
     <p class="hero-sub">One night, an unreasonable amount of Hennessy, and a dance floor you'll swear you don't remember. This is not a party. This is the story you'll be telling for a year.</p>
 
     <div class="hero-meta">
-      <div class="m-block"><div class="m-label">Date</div><div class="m-value">Sat, 30 Aug 2026</div></div>
-      <div class="m-block"><div class="m-label">Venue</div><div class="m-value">The Grand Terrace, Accra</div></div>
+      <div class="m-block"><div class="m-label">Date</div><div class="m-value">Fri, 11th Sept 2026</div></div>
+      <div class="m-block"><div class="m-label">Venue</div><div class="m-value">Pera lounge East legon, Accra</div></div>
       <div class="m-block"><div class="m-label">Time</div><div class="m-value">9:00 PM — Till Sunrise</div></div>
     </div>
 
@@ -739,7 +739,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 HANGOVER Events. All rights reserved.</span>
-      <span>Payments secured via Hubtel</span>
+      <span>Payments secured via paystack</span>
     </div>
   </div>
 </footer>
@@ -838,11 +838,11 @@
      BOOKING FLOW — talks to the Express/SQLite backend in /api.
      Buttons across the Tickets and Tables sections open this shared
      modal (via .js-open-booking), collect guest details, create the
-     booking, and hand the guest off to Hubtel checkout.
+     booking, and hand the guest off to paystack checkout.
   ------------------------------------------------------------------ */
   const API_BASE = '/api';
 
-  const TICKET_PRICES = { regular: 250, vip: 600 };
+  const TICKET_PRICES = { regular: 200, vip: 300 };
   const TABLE_PACKAGES = {
     premium: { label: 'Premium Table', price: 5000 },
     luxury:  { label: 'Luxury Table',  price: 3500 },
@@ -963,7 +963,7 @@
       }
 
       if(data.payment && data.payment.checkoutUrl){
-        showMsg('Booking created — redirecting you to Hubtel to complete payment…', 'success');
+        showMsg('Booking created — redirecting you to paystack to complete payment…', 'success');
         window.location.href = data.payment.checkoutUrl;
       } else {
         // Payment provider isn't configured yet (e.g. local/staging environment).

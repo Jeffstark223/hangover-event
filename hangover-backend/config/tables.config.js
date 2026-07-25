@@ -43,7 +43,8 @@ module.exports = {
   ],
 
   tickets: {
-    regular: { key: 'regular', label: 'Regular Ticket', price: 250 },
-    vip: { key: 'vip', label: 'VIP Ticket', price: 600 },
+    regular: { key: 'regular', label: 'Regular Ticket', price: 200 },
+    vip: { key: 'vip', label: 'VIP Ticket', price: 300 },
+    vvip: { key: 'vip', label: 'VIP Ticket', price: 800 },
   },
 };

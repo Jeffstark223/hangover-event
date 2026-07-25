@@ -44,7 +44,7 @@ function generateTicketPdf(booking) {
   doc.fillColor(INK);
   row(doc, 'Guest Name', booking.guest_name, 30, y, 360);
   y += 40;
-  row(doc, 'Event', 'HANGOVER — Sat, 30 Aug 2026 · The Grand Terrace, Accra', 30, y, 360);
+  row(doc, 'Event', 'HANGOVER — Fri, 11th Sept 2026 · Pera lounge East legon, Accra', 30, y, 360);
   y += 40;
 
   row(doc, 'Booking ID', booking.booking_id, 30, y, 170);
