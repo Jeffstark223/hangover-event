@@ -110,6 +110,8 @@ const paystackCallback = asyncHandler(async (req, res) => {
         updatedBooking
       );
 
+      console.log('Ticket saved at:', pdfPath);
+
     Booking.setTicketPdfPath(
       booking.booking_id,
       pdfPath

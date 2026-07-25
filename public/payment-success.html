@@ -2,10 +2,67 @@
 <html>
 <head>
     <title>Payment Successful - Hangover</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 15px 25px;
+            background: black;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+
+        .button:hover {
+            opacity: 0.8;
+        }
+    </style>
 </head>
+
 <body>
+
     <h1>🎉 Payment Successful!</h1>
+
     <p>Your Hangover ticket payment has been confirmed.</p>
-    <p>You will receive your ticket shortly.</p>
+
+    <p>Your ticket is ready.</p>
+
+    <a id="downloadTicket" class="button">
+        Download Ticket
+    </a>
+
+
+<script>
+
+    // Get booking ID from the URL
+    const params = new URLSearchParams(window.location.search);
+
+    const bookingId = params.get("bookingId");
+
+
+    const button = document.getElementById("downloadTicket");
+
+
+    if (bookingId) {
+
+        button.href = `/api/bookings/ticket/${bookingId}`;
+
+    } else {
+
+        button.innerHTML = "Ticket ID Missing";
+        button.style.pointerEvents = "none";
+
+    }
+
+</script>
+
 </body>
 </html>

@@ -8,14 +8,7 @@ const logger = require('../utils/logger');
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
 
 
-async function initiateCheckout({
-  paymentReference,
-  amount,
-  description,
-  customerName,
-  customerPhone,
-  customerEmail
-}) {
+async function initiateCheckout({ paymentReference, amount, description, customerName, customerPhone, customerEmail, bookingId }) {
 
   if (!config.paystack.secretKey) {
     throw new Error(
@@ -30,7 +23,7 @@ async function initiateCheckout({
     amount: amountInPesewas,
     currency: 'GHS',
     reference: paymentReference,
-    callback_url: config.paystack.callbackUrl,
+    callback_url: `${config.paystack.callbackUrl}?bookingId=${bookingId}`,
 
     metadata: {
       description,

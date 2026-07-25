@@ -112,7 +112,9 @@ const createBooking = asyncHandler(async (req, res) => {
       customerName: guestName,
       customerPhone: phoneNumber,
       customerEmail: email,
+      bookingId,
     });
+    
   } catch (err) {
     checkout = { error: err.message };
   }
