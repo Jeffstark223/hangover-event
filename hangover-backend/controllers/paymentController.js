@@ -5,86 +5,174 @@ const paystackService = require('../services/paystackService');
 const pdfService = require('../services/pdfService');
 const emailService = require('../services/emailService');
 const logger = require('../utils/logger');
+const config = require('../config/env');
 
 /**
- * POST /api/payments/paystack/callback
+ * Paystack callback
  *
- * paystack calls this URL after a payment attempt completes. We never
- * trust the callback body alone — we re-verify the transaction against
- * paystack's status API before marking a booking Paid. Until that
- * integration is live (see services/paystackService.js), this route
- * safely records the callback and leaves the booking Pending rather
- * than granting a free ticket.
+ * Handles:
+ * - Browser redirect from Paystack (GET)
+ * - Server callback from Paystack (POST)
  */
 const paystackCallback = asyncHandler(async (req, res) => {
-  const payload = req.body || {};
+  const payload = req.method === 'GET' ? req.query : (req.body || {});
 
-  // Field names below are placeholders — adjust to the real paystack
-  // callback schema once confirmed against their docs/sandbox.
-  const paymentReference = payload.ClientReference || payload.clientReference;
-  const checkoutId = payload.CheckoutId || payload.checkoutId;
-  const providerStatus = (payload.Status || payload.status || '').toString().toLowerCase();
+  const paymentReference =
+    payload.reference ||
+    payload.trxref ||
+    payload.ClientReference ||
+    payload.clientReference;
+
+  const providerStatus =
+    (payload.status || payload.Status || '').toString().toLowerCase();
 
   if (!paymentReference) {
-    throw new ApiError(400, 'Callback missing client reference.');
+    throw new ApiError(400, 'Callback missing payment reference.');
   }
 
   const booking = Booking.getByPaymentReference(paymentReference);
+
   if (!booking) {
-    logger.warn(`paystack callback for unknown payment reference: ${paymentReference}`);
-    // Respond 200 so paystack doesn't endlessly retry a reference we'll never recognize.
-    return res.status(200).json({ success: true, message: 'Acknowledged.' });
+    logger.warn(
+      `Paystack callback for unknown payment reference: ${paymentReference}`
+    );
+
+    return res.redirect(
+      `${config.appBaseUrl}/?payment=not-found`
+    );
   }
 
-  Booking.recordPaymentEvent(booking.booking_id, 'callback', payload);
+  Booking.recordPaymentEvent(
+    booking.booking_id,
+    'callback',
+    payload
+  );
 
   if (booking.payment_status === 'Paid') {
-    // Already processed (paystack may retry callbacks) — acknowledge idempotently.
-    return res.status(200).json({ success: true, message: 'Already processed.' });
+    return res.redirect(
+      `${config.appBaseUrl}/payment-success.html?bookingId=${booking.booking_id}`
+    );
   }
 
-  const verification = await paystackService.verifyTransaction({ checkoutId, paymentReference });
-  Booking.recordPaymentEvent(booking.booking_id, 'verified', verification);
+  const verification = await paystackService.verifyTransaction({
+    paymentReference,
+  });
 
-  const paymentSucceeded = verification.verified === true || providerStatus === 'success';
+  Booking.recordPaymentEvent(
+    booking.booking_id,
+    'verified',
+    verification
+  );
+
+  const paymentSucceeded =
+    verification.verified === true ||
+    providerStatus === 'success';
+
 
   if (!paymentSucceeded) {
-    Booking.setPaymentStatus(booking.booking_id, 'Failed');
-    if (booking.table_number) TableModel.releaseTable(booking.table_number);
-    return res.status(200).json({ success: true, message: 'Payment not confirmed; booking marked Failed.' });
+    Booking.setPaymentStatus(
+      booking.booking_id,
+      'Failed'
+    );
+
+    if (booking.table_number) {
+      TableModel.releaseTable(
+        booking.table_number
+      );
+    }
+
+    return res.redirect(
+      `${config.appBaseUrl}/?payment=failed`
+    );
   }
 
-  const amountPaid = verification.amount ?? booking.amount_paid;
-  Booking.setPaymentStatus(booking.booking_id, 'Paid', amountPaid);
 
-  const updatedBooking = Booking.getByBookingId(booking.booking_id);
+  const amountPaid =
+    verification.amount ?? booking.amount_paid;
+
+  Booking.setPaymentStatus(
+    booking.booking_id,
+    'Paid',
+    amountPaid
+  );
+
+
+  const updatedBooking =
+    Booking.getByBookingId(
+      booking.booking_id
+    );
+
 
   try {
-    const pdfPath = await pdfService.generateTicketPdf(updatedBooking);
-    Booking.setTicketPdfPath(booking.booking_id, pdfPath);
 
-    const emailResult = await emailService.sendBookingConfirmation(updatedBooking, pdfPath);
-    Booking.setEmailSent(booking.booking_id, emailResult.sent);
+    const pdfPath =
+      await pdfService.generateTicketPdf(
+        updatedBooking
+      );
+
+    Booking.setTicketPdfPath(
+      booking.booking_id,
+      pdfPath
+    );
+
+
+    const emailResult =
+      await emailService.sendBookingConfirmation(
+        updatedBooking,
+        pdfPath
+      );
+
+    Booking.setEmailSent(
+      booking.booking_id,
+      emailResult.sent
+    );
+
+
   } catch (err) {
-    // Payment already succeeded — never fail the callback response over
-    // ticket/email generation issues. Log loudly so ops can regenerate
-    // manually (see POST /api/admin/bookings/:bookingId/resend-ticket).
-    logger.error(`Ticket/email generation failed for ${booking.booking_id}:`, err.message);
+
+    logger.error(
+      `Ticket/email generation failed for ${booking.booking_id}:`,
+      err.message
+    );
+
   }
 
-  res.status(200).json({ success: true, message: 'Payment confirmed. Ticket generated.' });
+
+  return res.redirect(
+    `${config.appBaseUrl}/payment-success.html?bookingId=${booking.booking_id}`
+  );
+
 });
 
-/** GET /api/payments/status/:bookingId — lets the frontend poll for confirmation */
+
+/**
+ * Check payment status
+ */
 const paymentStatus = asyncHandler(async (req, res) => {
-  const booking = Booking.getByBookingId(req.params.bookingId);
-  if (!booking) throw new ApiError(404, 'Booking not found.');
+
+  const booking =
+    Booking.getByBookingId(
+      req.params.bookingId
+    );
+
+  if (!booking) {
+    throw new ApiError(
+      404,
+      'Booking not found.'
+    );
+  }
+
   res.json({
     success: true,
     bookingId: booking.booking_id,
     paymentStatus: booking.payment_status,
     ticketId: booking.ticket_id,
   });
+
 });
 
-module.exports = { paystackCallback, paymentStatus };
+
+module.exports = {
+  paystackCallback,
+  paymentStatus
+};
