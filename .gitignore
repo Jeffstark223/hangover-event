@@ -1,0 +1,17 @@
+.DS_Store
+
+# Environment secrets
+.env
+
+# Dependencies
+node_modules/
+
+# SQLite database
+database/*.db
+database/*.db-wal
+database/*.db-shm
+
+# Generated files
+hangover-backend/exports/*
+hangover-backend/tickets/*
+hangover-backend/uploads/*

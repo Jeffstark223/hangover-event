@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>HANGOVER — Retrieve My Ticket</title>
+
+  <style>
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:25px;
+      font-family:Arial,sans-serif;
+      background:#0b0a0d;
+      color:#ede8e2;
+    }
+
+    .card{
+      width:100%;
+      max-width:560px;
+      padding:40px;
+      border:1px solid #2b272d;
+      border-radius:22px;
+      background:#151217;
+      box-shadow:0 25px 70px rgba(0,0,0,.35);
+    }
+
+    h1{
+      margin:0 0 10px;
+    }
+
+    p{
+      color:#aaa;
+      line-height:1.6;
+    }
+
+    label{
+      display:block;
+      margin:25px 0 8px;
+      font-weight:700;
+    }
+
+    input{
+      width:100%;
+      padding:15px;
+      border-radius:9px;
+      border:1px solid #39333b;
+      background:#0b0a0d;
+      color:#fff;
+      font-size:16px;
+      outline:none;
+    }
+
+    button,
+    .download,
+    .copy-btn{
+      display:block;
+      width:100%;
+      margin-top:16px;
+      padding:15px;
+      border-radius:9px;
+      font-weight:700;
+      font-size:16px;
+      text-align:center;
+      cursor:pointer;
+    }
+
+    button,
+    .download{
+      border:0;
+      background:#d4af6a;
+      color:#0b0a0d;
+      text-decoration:none;
+    }
+
+    .copy-btn{
+      border:1px solid #d4af6a;
+      background:transparent;
+      color:#d4af6a;
+    }
+
+    button:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    .result{
+      margin-top:25px;
+      padding:22px;
+      border-radius:12px;
+      background:#0b0a0d;
+      display:none;
+    }
+
+    .success{color:#65c982}
+    .pending{color:#d4af6a}
+    .error{color:#ff7272}
+
+    .details{
+      margin-top:15px;
+      line-height:1.9;
+      color:#ccc;
+    }
+
+    .booking-id{
+      margin-top:18px;
+      padding:15px;
+      border:1px solid #39333b;
+      border-radius:10px;
+      text-align:center;
+      background:#151217;
+    }
+
+    .booking-id small{
+      display:block;
+      color:#888;
+      margin-bottom:6px;
+    }
+
+    .booking-id strong{
+      display:block;
+      color:#d4af6a;
+      font-family:monospace;
+      font-size:18px;
+      word-break:break-all;
+    }
+
+    .download{
+      display:none;
+    }
+
+    .back{
+      display:block;
+      margin-top:25px;
+      text-align:center;
+      color:#d4af6a;
+      text-decoration:none;
+    }
+
+    .notice{
+      font-size:13px;
+      color:#888;
+      margin-top:14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <h1>Retrieve My Ticket</h1>
+
+  <p>
+    Already purchased your HANGOVER ticket?
+    Enter your <strong>Booking ID</strong> or the
+    <strong>phone number you used when booking</strong>.
+  </p>
+
+  <form id="retrieveForm">
+
+    <label for="identifier">
+      Booking ID or Phone Number
+    </label>
+
+    <input
+      id="identifier"
+      type="text"
+      placeholder="BK-XXXXXXXXXX or 055..."
+      autocomplete="off"
+      required
+    >
+
+    <button id="findBtn" type="submit">
+      Find My Ticket
+    </button>
+
+  </form>
+
+  <div id="result" class="result">
+
+    <h2 id="resultTitle"></h2>
+
+    <div id="resultMessage"></div>
+
+    <div id="details" class="details"></div>
+
+    <div id="bookingBox" class="booking-id" style="display:none;">
+      <small>Your Booking ID</small>
+      <strong id="bookingIdDisplay"></strong>
+    </div>
+
+    <button
+      id="copyBtn"
+      class="copy-btn"
+      style="display:none;"
+      type="button"
+    >
+      Copy Booking ID
+    </button>
+
+  </div>
+
+  <a id="downloadBtn" class="download">
+    Download My Ticket
+  </a>
+
+  <p class="notice">
+    Keep your Booking ID safe. You can use it anytime to retrieve your ticket.
+  </p>
+
+  <a href="/" class="back">
+    ← Return to HANGOVER
+  </a>
+
+</div>
+
+<script>
+
+  const form = document.getElementById('retrieveForm');
+  const input = document.getElementById('identifier');
+  const result = document.getElementById('result');
+
+  const resultTitle = document.getElementById('resultTitle');
+  const resultMessage = document.getElementById('resultMessage');
+  const details = document.getElementById('details');
+
+  const bookingBox = document.getElementById('bookingBox');
+  const bookingIdDisplay = document.getElementById('bookingIdDisplay');
+
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  const findBtn = document.getElementById('findBtn');
+
+  let currentBookingId = '';
+
+  form.addEventListener('submit', async (e) => {
+
+    e.preventDefault();
+
+    const identifier = input.value.trim();
+
+    if (!identifier) return;
+
+    result.style.display = 'block';
+
+    resultTitle.textContent = 'Checking...';
+    resultTitle.className = '';
+
+    resultMessage.textContent =
+      'Please wait while we find your booking.';
+
+    details.innerHTML = '';
+
+    bookingBox.style.display = 'none';
+    copyBtn.style.display = 'none';
+    downloadBtn.style.display = 'none';
+
+    findBtn.disabled = true;
+
+    try {
+
+      const res = await fetch('/api/bookings/retrieve', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          data.message || 'Booking could not be found.'
+        );
+      }
+
+      const booking = data.booking;
+
+      currentBookingId = booking.bookingId;
+
+      bookingIdDisplay.textContent = booking.bookingId;
+
+      bookingBox.style.display = 'block';
+      copyBtn.style.display = 'block';
+
+      details.innerHTML = `
+        <strong>Guest:</strong>
+        ${escapeHtml(booking.guestName)}
+        <br>
+
+        <strong>Ticket:</strong>
+        ${escapeHtml(booking.ticketType)}
+        <br>
+
+        <strong>Quantity:</strong>
+        ${escapeHtml(booking.quantity)}
+        <br>
+
+        <strong>Amount:</strong>
+        GHS ${Number(booking.amountDue).toLocaleString()}
+      `;
+
+      if (booking.paymentStatus === 'Paid') {
+
+        resultTitle.textContent =
+          '✓ Payment Confirmed';
+
+        resultTitle.className = 'success';
+
+        resultMessage.textContent =
+          'Your payment has been confirmed. Your HANGOVER ticket is ready.';
+
+        if (booking.ticketAvailable) {
+
+          downloadBtn.href =
+            `/api/bookings/ticket/${encodeURIComponent(
+              booking.bookingId
+            )}`;
+
+          downloadBtn.style.display = 'block';
+
+        } else {
+
+          resultMessage.textContent =
+            'Your payment is confirmed, but your ticket is still being generated. Please try again shortly.';
+
+        }
+
+      } else if (booking.paymentStatus === 'Pending') {
+
+        resultTitle.textContent =
+          'Payment Pending';
+
+        resultTitle.className = 'pending';
+
+        resultMessage.textContent =
+          'Your payment has been submitted and is waiting for verification by the HANGOVER event team.';
+
+      } else {
+
+        resultTitle.textContent =
+          `Booking Status: ${booking.paymentStatus}`;
+
+        resultMessage.textContent =
+          'Please contact the HANGOVER event team if you need assistance.';
+
+      }
+
+    } catch (err) {
+
+      resultTitle.textContent =
+        'Booking Not Found';
+
+      resultTitle.className = 'error';
+
+      resultMessage.textContent =
+        err.message;
+
+    } finally {
+
+      findBtn.disabled = false;
+
+    }
+
+  });
+
+
+  copyBtn.addEventListener('click', async () => {
+
+    if (!currentBookingId) return;
+
+    try {
+
+      await navigator.clipboard.writeText(currentBookingId);
+
+      copyBtn.textContent = '✓ Booking ID Copied';
+
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy Booking ID';
+      }, 2000);
+
+    } catch (err) {
+
+      copyBtn.textContent =
+        'Copy failed — select the ID above';
+
+    }
+
+  });
+
+
+  function escapeHtml(value) {
+
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  }
+
+</script>
+
+</body>
+</html>
