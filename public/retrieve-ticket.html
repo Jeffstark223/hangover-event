@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>HANGOVER — Retrieve My Ticket</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #0b0a0d;
+      color: #ede8e2;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    .card {
+      padding: 35px;
+      border: 1px solid #2b272d;
+      border-radius: 20px;
+      background: #151217;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 0 30px;
+      color: #999;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #332f35;
+      border-radius: 10px;
+      background: #0f0e11;
+      color: #ede8e2;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #d4af6a;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #d4af6a;
+      color: #0b0a0d;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    #result {
+      margin-top: 25px;
+    }
+
+    #resultTitle {
+      margin-bottom: 8px;
+    }
+
+    #resultMessage {
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .success {
+      color: #d4af6a;
+    }
+
+    .pending {
+      color: #d4af6a;
+    }
+
+    .details {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid #2b272d;
+      border-radius: 14px;
+      background: #111014;
+      line-height: 2;
+    }
+
+    .booking-id {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid #2b272d;
+      border-radius: 14px;
+      background: #111014;
+      text-align: center;
+    }
+
+    .booking-id small {
+      display: block;
+      margin-bottom: 8px;
+      color: #888;
+    }
+
+    .booking-id strong {
+      display: block;
+      color: #d4af6a;
+      font-family: monospace;
+      font-size: 18px;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid #3a353d;
+      color: #d4af6a;
+    }
+
+    .download {
+      display: none;
+      width: 100%;
+      margin-top: 15px;
+      padding: 14px;
+      background: #d4af6a;
+      color: #0b0a0d;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .free-tickets {
+      display: none;
+      margin-top: 22px;
+      padding: 20px;
+      border: 1px solid #2b272d;
+      border-radius: 16px;
+      background: #111014;
+    }
+
+    .free-tickets h3 {
+      margin: 0 0 8px;
+      color: #ede8e2;
+      font-size: 18px;
+    }
+
+    .free-tickets-description {
+      margin: 0 0 18px;
+      color: #999;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .free-ticket-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 15px 0;
+      border-top: 1px solid #2b272d;
+    }
+
+    .free-ticket-info {
+      min-width: 0;
+    }
+
+    .free-ticket-title {
+      color: #ede8e2;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .free-ticket-id {
+      margin-top: 5px;
+      color: #888;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .free-ticket-download {
+      flex-shrink: 0;
+      display: inline-block;
+      padding: 10px 14px;
+      background: #d4af6a;
+      color: #0b0a0d;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .notice {
+      margin-top: 14px;
+      color: #888;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .back {
+      display: block;
+      margin-top: 25px;
+      color: #d4af6a;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    @media (max-width: 520px) {
+
+      body {
+        padding: 25px 15px;
+      }
+
+      .card {
+        padding: 24px 18px;
+      }
+
+      .free-ticket-item {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .free-ticket-download {
+        width: 100%;
+        text-align: center;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="card">
+
+      <h1>Retrieve My Ticket</h1>
+
+      <p class="subtitle">
+        Already purchased your HANGOVER ticket?
+        Enter your Booking ID or the phone number you used when booking.
+      </p>
+
+      <form id="retrieveForm">
+
+        <label for="identifier">
+          Booking ID or Phone Number
+        </label>
+
+        <input
+          id="identifier"
+          type="text"
+          placeholder="BK-XXXXXXXXXX or 055..."
+          autocomplete="off"
+          required
+        >
+
+        <button
+          id="findBtn"
+          type="submit"
+        >
+          Find My Ticket
+        </button>
+
+      </form>
+
+
+      <div
+        id="result"
+        style="display:none;"
+      >
+
+        <h2 id="resultTitle"></h2>
+
+        <div id="resultMessage"></div>
+
+        <div
+          id="details"
+          class="details"
+        ></div>
+
+
+        <div
+          id="bookingBox"
+          class="booking-id"
+          style="display:none;"
+        >
+
+          <small>
+            Your Booking ID
+          </small>
+
+          <strong
+            id="bookingIdDisplay"
+          ></strong>
+
+        </div>
+
+
+        <button
+          id="copyBtn"
+          class="copy-btn"
+          style="display:none;"
+          type="button"
+        >
+          Copy Booking ID
+        </button>
+
+
+        <a
+          id="downloadBtn"
+          class="download"
+          href="#"
+          target="_blank"
+        >
+          Download My Ticket
+        </a>
+
+
+        <div
+          id="freeTicketsBox"
+          class="free-tickets"
+        ></div>
+
+      </div>
+
+
+      <p class="notice">
+        Keep your Booking ID safe. You can use it anytime to retrieve your ticket.
+      </p>
+
+
+      <a
+        href="/"
+        class="back"
+      >
+        ← Return to HANGOVER
+      </a>
+
+    </div>
+
+  </div>
+
+
+<script>
+
+  const form =
+    document.getElementById('retrieveForm');
+
+  const input =
+    document.getElementById('identifier');
+
+  const result =
+    document.getElementById('result');
+
+  const resultTitle =
+    document.getElementById('resultTitle');
+
+  const resultMessage =
+    document.getElementById('resultMessage');
+
+  const details =
+    document.getElementById('details');
+
+  const bookingBox =
+    document.getElementById('bookingBox');
+
+  const bookingIdDisplay =
+    document.getElementById('bookingIdDisplay');
+
+  const copyBtn =
+    document.getElementById('copyBtn');
+
+  const downloadBtn =
+    document.getElementById('downloadBtn');
+
+  const freeTicketsBox =
+    document.getElementById('freeTicketsBox');
+
+  const findBtn =
+    document.getElementById('findBtn');
+
+  let currentBookingId = '';
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  }
+
+
+  form.addEventListener(
+    'submit',
+    async (e) => {
+
+      e.preventDefault();
+
+      const identifier =
+        input.value.trim();
+
+      if (!identifier) {
+        return;
+      }
+
+
+      result.style.display =
+        'block';
+
+      resultTitle.textContent =
+        'Checking...';
+
+      resultTitle.className =
+        '';
+
+      resultMessage.textContent =
+        'Please wait while we find your booking.';
+
+      details.innerHTML =
+        '';
+
+      bookingBox.style.display =
+        'none';
+
+      copyBtn.style.display =
+        'none';
+
+      downloadBtn.style.display =
+        'none';
+
+      freeTicketsBox.style.display =
+        'none';
+
+      freeTicketsBox.innerHTML =
+        '';
+
+      findBtn.disabled =
+        true;
+
+
+      try {
+
+        const res =
+          await fetch(
+            '/api/bookings/retrieve',
+            {
+              method: 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json'
+              },
+
+              body: JSON.stringify({
+                identifier
+              })
+            }
+          );
+
+
+        const data =
+          await res.json();
+
+
+        if (!res.ok) {
+
+          throw new Error(
+            data.message ||
+            'Booking could not be found.'
+          );
+
+        }
+
+
+        const booking =
+          data.booking;
+
+
+        currentBookingId =
+          booking.bookingId;
+
+
+        bookingIdDisplay.textContent =
+          booking.bookingId;
+
+
+        bookingBox.style.display =
+          'block';
+
+        copyBtn.style.display =
+          'block';
+
+
+        details.innerHTML = `
+
+          <strong>Guest:</strong>
+          ${escapeHtml(booking.guestName)}
+
+          <br>
+
+          <strong>Ticket:</strong>
+          ${escapeHtml(booking.ticketType)}
+
+          <br>
+
+          <strong>Quantity:</strong>
+          ${escapeHtml(booking.quantity)}
+
+          <br>
+
+          <strong>Amount:</strong>
+          GHS ${Number(
+            booking.amountDue
+          ).toLocaleString()}
+
+        `;
+
+
+        if (
+          booking.paymentStatus ===
+          'Paid'
+        ) {
+
+          resultTitle.textContent =
+            '✓ Payment Confirmed';
+
+          resultTitle.className =
+            'success';
+
+
+          resultMessage.textContent =
+            'Your payment has been confirmed. Your HANGOVER ticket is ready.';
+
+
+          /*
+           * MAIN TICKET
+           */
+
+          if (
+            booking.ticketAvailable
+          ) {
+
+            downloadBtn.href =
+              `/api/bookings/ticket/${encodeURIComponent(
+                booking.bookingId
+              )}`;
+
+            downloadBtn.style.display =
+              'block';
+
+          }
+
+
+          /*
+           * INCLUDED FREE TICKETS
+           */
+
+          if (
+            Array.isArray(
+              booking.freeTickets
+            ) &&
+            booking.freeTickets.length >
+              0
+          ) {
+
+            const availableFreeTickets =
+              booking.freeTickets.filter(
+                (ticket) =>
+                  ticket.ticketAvailable
+              );
+
+
+            if (
+              availableFreeTickets.length >
+              0
+            ) {
+
+              freeTicketsBox.innerHTML = `
+
+                <h3>
+                  Included Free Guest Tickets
+                </h3>
+
+                <p class="free-tickets-description">
+
+                  Your table reservation includes
+                  ${availableFreeTickets.length}
+                  free guest ticket${availableFreeTickets.length === 1 ? '' : 's'}.
+
+                  Each ticket has its own unique ID.
+
+                </p>
+
+
+                ${availableFreeTickets
+                  .map(
+                    (ticket, index) => `
+
+                      <div
+                        class="free-ticket-item"
+                      >
+
+                        <div
+                          class="free-ticket-info"
+                        >
+
+                          <div
+                            class="free-ticket-title"
+                          >
+                            Free Guest Ticket
+                            ${index + 1}
+                          </div>
+
+                          <div
+                            class="free-ticket-id"
+                          >
+                            ${escapeHtml(
+                              ticket.ticketId
+                            )}
+                          </div>
+
+                        </div>
+
+
+                        <a
+                          href="/api/bookings/free-ticket/${encodeURIComponent(
+                            ticket.ticketId
+                          )}"
+                          class="free-ticket-download"
+                          target="_blank"
+                        >
+                          Download
+                        </a>
+
+                      </div>
+
+                    `
+                  )
+                  .join('')}
+
+              `;
+
+
+              freeTicketsBox.style.display =
+                'block';
+
+            }
+
+          }
+
+        }
+
+
+        else if (
+          booking.paymentStatus ===
+          'Pending'
+        ) {
+
+          resultTitle.textContent =
+            'Payment Pending';
+
+          resultTitle.className =
+            'pending';
+
+          resultMessage.textContent =
+            'Your payment has been submitted and is waiting for verification by the HANGOVER event team.';
+
+        }
+
+
+        else {
+
+          resultTitle.textContent =
+            `Booking Status: ${escapeHtml(
+              booking.paymentStatus
+            )}`;
+
+          resultMessage.textContent =
+            'Your booking has been found, but payment has not yet been confirmed.';
+
+        }
+
+      }
+
+
+      catch (err) {
+
+        resultTitle.textContent =
+          'Booking Not Found';
+
+        resultTitle.className =
+          '';
+
+        resultMessage.textContent =
+          err.message;
+
+        details.innerHTML =
+          '';
+
+        bookingBox.style.display =
+          'none';
+
+        copyBtn.style.display =
+          'none';
+
+        downloadBtn.style.display =
+          'none';
+
+        freeTicketsBox.style.display =
+          'none';
+
+        freeTicketsBox.innerHTML =
+          '';
+
+      }
+
+
+      finally {
+
+        findBtn.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+
+  copyBtn.addEventListener(
+    'click',
+    async () => {
+
+      if (!currentBookingId) {
+        return;
+      }
+
+
+      try {
+
+        await navigator.clipboard.writeText(
+          currentBookingId
+        );
+
+
+        copyBtn.textContent =
+          '✓ Booking ID Copied';
+
+
+        setTimeout(
+          () => {
+
+            copyBtn.textContent =
+              'Copy Booking ID';
+
+          },
+          2000
+        );
+
+      }
+
+
+      catch (err) {
+
+        alert(
+          'Unable to copy the Booking ID. Please copy it manually.'
+        );
+
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
+

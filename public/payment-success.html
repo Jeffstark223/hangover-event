@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HANGOVER — Ticket Status</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b0a0d;
+      color: #ede8e2;
+      text-align: center;
+      padding: 60px 20px;
+      margin: 0;
+    }
+
+    .card {
+      max-width: 560px;
+      margin: auto;
+      padding: 38px;
+      border: 1px solid #2b272d;
+      border-radius: 20px;
+      background: #151217;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #d4af6a;
+    }
+
+    p {
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 14px 24px;
+      background: #d4af6a;
+      color: #0b0a0d;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .button:hover {
+      opacity: 0.9;
+    }
+
+    .button.disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .id {
+      font-family: monospace;
+      color: #d4af6a;
+    }
+
+    .free-tickets {
+      display: none;
+      margin-top: 30px;
+      padding: 24px;
+      border: 1px solid #2b272d;
+      border-radius: 14px;
+      background: #100e12;
+      text-align: left;
+    }
+
+    .free-tickets h2 {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .free-tickets p {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .free-ticket {
+      padding: 16px;
+      margin-top: 12px;
+      border: 1px solid #2b272d;
+      border-radius: 10px;
+      background: #151217;
+    }
+
+    .free-ticket-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .free-ticket-id {
+      font-family: monospace;
+      color: #d4af6a;
+      font-size: 14px;
+      word-break: break-all;
+    }
+
+    .free-ticket .button {
+      margin-top: 12px;
+      padding: 11px 18px;
+      font-size: 14px;
+    }
+
+    .no-free-tickets {
+      display: none;
+      margin-top: 25px;
+      color: #888;
+      font-size: 14px;
+    }
+
+    .return-link {
+      display: inline-block;
+      margin-top: 25px;
+      color: #d4af6a;
+      text-decoration: none;
+    }
+
+    .return-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="card">
+
+```
+<h1 id="title">Checking your booking…</h1>
+
+<p id="message">
+  Please wait while we check the latest payment status.
+</p>
+
+<p id="bookingLine"></p>
+
+<!-- MAIN TICKET -->
+<a
+  id="downloadTicket"
+  class="button disabled"
+>
+  Download Ticket
+</a>
+
+<!-- FREE TICKETS -->
+<div
+  id="freeTicketsBox"
+  class="free-tickets"
+>
+
+  <h2>🎟️ Get Your Other Free Tickets</h2>
+
+  <p>
+    Your table reservation includes free tickets.
+    Download each ticket below and give them to your guests.
+  </p>
+
+  <div id="freeTicketsList"></div>
+
+</div>
+
+<p id="noFreeTickets" class="no-free-tickets">
+  No additional free tickets were included with this booking.
+</p>
+
+<a
+  href="/"
+  class="return-link"
+>
+  Return to HANGOVER
+</a>
+```
+
+  </div>
+
+<script>
+
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const bookingId = params.get('bookingId');
+
+  const title =
+    document.getElementById('title');
+
+  const message =
+    document.getElementById('message');
+
+  const bookingLine =
+    document.getElementById('bookingLine');
+
+  const button =
+    document.getElementById('downloadTicket');
+
+  const freeTicketsBox =
+    document.getElementById('freeTicketsBox');
+
+  const freeTicketsList =
+    document.getElementById('freeTicketsList');
+
+  const noFreeTickets =
+    document.getElementById('noFreeTickets');
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  }
+
+
+  function showFreeTickets(freeTickets) {
+
+    freeTicketsList.innerHTML = '';
+
+    if (
+      !Array.isArray(freeTickets) ||
+      freeTickets.length === 0
+    ) {
+
+      freeTicketsBox.style.display = 'none';
+
+      noFreeTickets.style.display = 'block';
+
+      return;
+    }
+
+    noFreeTickets.style.display = 'none';
+
+    freeTicketsBox.style.display = 'block';
+
+
+    freeTickets.forEach((ticket, index) => {
+
+      const ticketDiv =
+        document.createElement('div');
+
+      ticketDiv.className = 'free-ticket';
+
+
+      const title =
+        document.createElement('div');
+
+      title.className = 'free-ticket-title';
+
+      title.textContent =
+        `Free Ticket ${index + 1}`;
+
+
+      const ticketId =
+        document.createElement('div');
+
+      ticketId.className = 'free-ticket-id';
+
+      ticketId.textContent =
+        ticket.ticketId;
+
+
+      ticketDiv.appendChild(title);
+
+      ticketDiv.appendChild(ticketId);
+
+
+      if (ticket.ticketAvailable) {
+
+        const download =
+          document.createElement('a');
+
+        download.className = 'button';
+
+        download.href =
+          `/api/bookings/free-ticket/${encodeURIComponent(
+            ticket.ticketId
+          )}`;
+
+        download.textContent =
+          'Download Free Ticket';
+
+        download.target = '_blank';
+
+        ticketDiv.appendChild(download);
+
+      } else {
+
+        const unavailable =
+          document.createElement('p');
+
+        unavailable.style.marginTop = '10px';
+
+        unavailable.style.fontSize = '13px';
+
+        unavailable.textContent =
+          'This free ticket is still being generated. Please try again shortly.';
+
+        ticketDiv.appendChild(unavailable);
+
+      }
+
+
+      freeTicketsList.appendChild(ticketDiv);
+
+    });
+
+  }
+
+
+  async function checkStatus() {
+
+    if (!bookingId) {
+
+      title.textContent =
+        'Booking ID Missing';
+
+      message.textContent =
+        'We could not identify your booking.';
+
+      return;
+
+    }
+
+
+    bookingLine.innerHTML =
+      `Booking ID: <span class="id">${escapeHtml(bookingId)}</span>`;
+
+
+    try {
+
+      const res =
+        await fetch(
+          `/api/payments/status/${encodeURIComponent(
+            bookingId
+          )}`
+        );
+
+
+      const data =
+        await res.json();
+
+
+      if (!res.ok) {
+
+        throw new Error(
+          data.message ||
+          'Unable to check booking.'
+        );
+
+      }
+
+
+      if (data.paymentStatus === 'Paid') {
+
+        title.textContent =
+          '🎉 Payment Confirmed!';
+
+
+        message.textContent =
+          'Your HANGOVER payment has been verified and your ticket is ready.';
+
+
+        button.href =
+          `/api/bookings/ticket/${encodeURIComponent(
+            bookingId
+          )}`;
+
+
+        button.classList.remove(
+          'disabled'
+        );
+
+
+        /*
+          The payment-status endpoint may return
+          the booking information containing
+          the included free tickets.
+        */
+
+        let freeTickets =
+          data.freeTickets ||
+          (data.booking &&
+            data.booking.freeTickets) ||
+          [];
+
+
+        /*
+          If the payment-status endpoint does not
+          include free tickets, retrieve the booking
+          using the Booking ID.
+        */
+
+        if (
+          !Array.isArray(freeTickets)
+        ) {
+
+          freeTickets = [];
+
+        }
+
+
+        if (
+          freeTickets.length === 0
+        ) {
+
+          try {
+
+            const retrieveRes =
+              await fetch(
+                '/api/bookings/retrieve',
+                {
+                  method: 'POST',
+
+                  headers: {
+                    'Content-Type':
+                      'application/json'
+                  },
+
+                  body: JSON.stringify({
+                    identifier:
+                      bookingId
+                  })
+                }
+              );
+
+
+            const retrieveData =
+              await retrieveRes.json();
+
+
+            if (
+              retrieveRes.ok &&
+              retrieveData.booking &&
+              Array.isArray(
+                retrieveData.booking.freeTickets
+              )
+            ) {
+
+              freeTickets =
+                retrieveData.booking.freeTickets;
+
+            }
+
+          } catch (retrieveError) {
+
+            console.error(
+              'Unable to retrieve free tickets:',
+              retrieveError
+            );
+
+          }
+
+        }
+
+
+        showFreeTickets(
+          freeTickets
+        );
+
+
+      } else {
+
+        title.textContent =
+          'Payment Pending';
+
+
+        message.textContent =
+          'Your transaction has been submitted. The event team will verify it and your ticket will be issued once payment is confirmed.';
+
+
+        setTimeout(
+          checkStatus,
+          10000
+        );
+
+      }
+
+
+    } catch (err) {
+
+      title.textContent =
+        'Unable to Check Status';
+
+      message.textContent =
+        err.message;
+
+    }
+
+  }
+
+
+  checkStatus();
+
+</script>
+
+</body>
+</html>
