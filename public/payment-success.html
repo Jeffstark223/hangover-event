@@ -154,26 +154,23 @@
   Download Ticket
 </a>
 
-<!-- FREE TICKETS -->
+<!-- ONE TICKET PER PERSON (group / per-person bookings) -->
 <div
-  id="freeTicketsBox"
+  id="attendeeTicketsBox"
   class="free-tickets"
 >
 
-  <h2>🎟️ Get Your Other Free Tickets</h2>
+  <h2>🎟️ Get Your Other Tickets</h2>
 
   <p>
-    Your table reservation includes free tickets.
-    Download each ticket below and give them to your guests.
+    Your booking has separate tickets, one for each person.
+    Download each ticket below and share it with the person it is for.
+    Every ticket has its own ID and can only be used once.
   </p>
 
-  <div id="freeTicketsList"></div>
+  <div id="attendeeTicketsList"></div>
 
 </div>
-
-<p id="noFreeTickets" class="no-free-tickets">
-  No additional free tickets were included with this booking.
-</p>
 
 <a
   href="/"
@@ -205,15 +202,6 @@
   const button =
     document.getElementById('downloadTicket');
 
-  const freeTicketsBox =
-    document.getElementById('freeTicketsBox');
-
-  const freeTicketsList =
-    document.getElementById('freeTicketsList');
-
-  const noFreeTickets =
-    document.getElementById('noFreeTickets');
-
 
   function escapeHtml(value) {
 
@@ -227,57 +215,66 @@
   }
 
 
-  function showFreeTickets(freeTickets) {
+  function showAttendeeTickets(attendeeTickets) {
 
-    freeTicketsList.innerHTML = '';
+    const box =
+      document.getElementById('attendeeTicketsBox');
+
+    const list =
+      document.getElementById('attendeeTicketsList');
+
+    list.innerHTML = '';
 
     if (
-      !Array.isArray(freeTickets) ||
-      freeTickets.length === 0
+      !Array.isArray(attendeeTickets) ||
+      attendeeTickets.length === 0
     ) {
 
-      freeTicketsBox.style.display = 'none';
-
-      noFreeTickets.style.display = 'block';
+      box.style.display = 'none';
 
       return;
     }
 
-    noFreeTickets.style.display = 'none';
+    const total = attendeeTickets.length;
 
-    freeTicketsBox.style.display = 'block';
+    if (total === 1) {
 
+      box.style.display = 'none';
 
-    freeTickets.forEach((ticket, index) => {
+      return;
+    }
+
+    // Ticket 1 is the main Download button.
+    button.textContent =
+      `Download Ticket 1 of ${total}`;
+
+    box.style.display = 'block';
+
+    attendeeTickets.slice(1).forEach((ticket) => {
 
       const ticketDiv =
         document.createElement('div');
 
       ticketDiv.className = 'free-ticket';
 
-
-      const title =
+      const heading =
         document.createElement('div');
 
-      title.className = 'free-ticket-title';
+      heading.className = 'free-ticket-title';
 
-      title.textContent =
-        `Free Ticket ${index + 1}`;
-
+      heading.textContent =
+        `Ticket ${ticket.attendeeNumber} of ${ticket.attendeeTotal}`;
 
       const ticketId =
         document.createElement('div');
 
       ticketId.className = 'free-ticket-id';
 
-      ticketId.textContent =
-        ticket.ticketId;
+      ticketId.textContent = ticket.ticketId;
 
-
-      ticketDiv.appendChild(title);
+      ticketDiv.appendChild(heading);
 
       ticketDiv.appendChild(ticketId);
-
 
       if (ticket.ticketAvailable) {
 
@@ -287,12 +284,12 @@
         download.className = 'button';
 
         download.href =
-          `/api/bookings/free-ticket/${encodeURIComponent(
+          `/api/bookings/attendee-ticket/${encodeURIComponent(
             ticket.ticketId
           )}`;
 
         download.textContent =
-          'Download Free Ticket';
+          `Download Ticket ${ticket.attendeeNumber}`;
 
         download.target = '_blank';
 
@@ -308,14 +305,13 @@
         unavailable.style.fontSize = '13px';
 
         unavailable.textContent =
-          'This free ticket is still being generated. Please try again shortly.';
+          'This ticket is still being generated. Please try again shortly.';
 
         ticketDiv.appendChild(unavailable);
 
       }
 
-
-      freeTicketsList.appendChild(ticketDiv);
+      list.appendChild(ticketDiv);
 
     });
 
@@ -386,37 +382,10 @@
         );
 
 
-        /*
-          The payment-status endpoint may return
-          the booking information containing
-          the included free tickets.
-        */
-
-        let freeTickets =
-          data.freeTickets ||
-          (data.booking &&
-            data.booking.freeTickets) ||
-          [];
+        let attendeeTickets = [];
 
 
-        /*
-          If the payment-status endpoint does not
-          include free tickets, retrieve the booking
-          using the Booking ID.
-        */
-
-        if (
-          !Array.isArray(freeTickets)
-        ) {
-
-          freeTickets = [];
-
-        }
-
-
-        if (
-          freeTickets.length === 0
-        ) {
+        {
 
           try {
 
@@ -447,19 +416,19 @@
               retrieveRes.ok &&
               retrieveData.booking &&
               Array.isArray(
-                retrieveData.booking.freeTickets
+                retrieveData.booking.attendeeTickets
               )
             ) {
 
-              freeTickets =
-                retrieveData.booking.freeTickets;
+              attendeeTickets =
+                retrieveData.booking.attendeeTickets;
 
             }
 
           } catch (retrieveError) {
 
             console.error(
-              'Unable to retrieve free tickets:',
+              'Unable to retrieve tickets:',
               retrieveError
             );
 
@@ -468,8 +437,8 @@
         }
 
 
-        showFreeTickets(
-          freeTickets
+        showAttendeeTickets(
+          attendeeTickets
         );
 
 

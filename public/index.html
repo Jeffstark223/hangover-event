@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HANGOVER — The Night You Won't Remember</title>
-<meta name="description" content="HANGOVER — a premium nightlife experience. Tickets and VIP table reservations.">
+<meta name="description" content="HANGOVER — a premium nightlife experience. Tickets for the night.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -258,13 +258,10 @@
     transition:transform .4s ease, box-shadow .4s ease, border-color .4s ease;
   }
   .ticket-card:hover{transform:translateY(-10px);box-shadow:0 30px 60px -25px rgba(0,0,0,0.65);border-color:rgba(212,175,106,0.4);}
-  .ticket-card.vip{border-color:rgba(212,175,106,0.5);}
   .ticket-top{padding:38px 38px 28px;}
   .ticket-kind{font-family:var(--mono);font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--smoke-dim);}
-  .ticket-card.vip .ticket-kind{color:var(--gold);}
   .ticket-name{font-family:var(--display);font-size:2.2rem;margin:10px 0 18px;}
   .ticket-price{font-family:var(--mono);font-size:2.6rem;color:var(--ember);}
-  .ticket-card.vip .ticket-price{color:var(--gold);}
   .ticket-price sub{font-size:0.9rem;color:var(--smoke-dim);}
   /* perforation between price and benefits: signature ticket-stub motif */
   .stub-line{
@@ -283,38 +280,11 @@
   }
   .ticket-benefits li:last-child{border-bottom:none;}
   .ticket-benefits li .check{color:var(--ember);font-family:var(--mono);}
-  .ticket-card.vip .ticket-benefits li .check{color:var(--gold);}
   .ticket-bottom{padding:16px 38px 38px;}
   .ticket-bottom .btn{width:100%;justify-content:center;}
-
-  /* ---------- TABLES ---------- */
-  .tables{padding:130px 0;background:var(--obsidian);}
-  .table-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;}
-  .table-card{
-    background:var(--obsidian-2);border:1px solid var(--line);border-radius:4px;overflow:hidden;
-    display:flex;flex-direction:column;
-    transition:transform .4s ease, box-shadow .4s ease;
-  }
-  .table-card:hover{transform:translateY(-8px);box-shadow:0 26px 55px -22px rgba(0,0,0,0.6);}
-  .table-img{height:190px;position:relative;overflow:hidden;}
-  .table-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
-  .table-card:hover .table-img img{transform:scale(1.08);}
-  .table-badge{
-    position:absolute;top:16px;left:16px;background:rgba(11,10,13,0.75);backdrop-filter:blur(6px);
-    padding:6px 14px;border-radius:2px;font-family:var(--mono);font-size:0.65rem;letter-spacing:0.15em;
-    text-transform:uppercase;color:var(--gold);border:1px solid rgba(212,175,106,0.35);
-  }
-  .table-body{padding:28px;display:flex;flex-direction:column;flex:1;}
-  .table-name{font-family:var(--display);font-size:1.5rem;margin-bottom:6px;}
-  .table-price{font-family:var(--mono);color:var(--ember);font-size:1.5rem;margin-bottom:20px;}
-  .table-includes{list-style:none;flex:1;margin-bottom:24px;}
-  .table-includes li{
-    font-size:0.88rem;color:var(--smoke-dim);padding:6px 0 6px 18px;position:relative;
-    border-bottom:1px dashed rgba(237,232,226,0.07);
-  }
-  .table-includes li:last-child{border-bottom:none;}
-  .table-includes li::before{content:'—';position:absolute;left:0;color:var(--gold);}
-  .table-body .btn{width:100%;justify-content:center;}
+  .ticket-price-note{font-family:var(--mono);font-size:0.68rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--smoke-dim);margin-top:12px;}
+  .tickets-error{grid-column:1/-1;text-align:center;color:var(--smoke-dim);font-size:0.92rem;padding:18px;border:1px dashed var(--line);border-radius:3px;}
+  [hidden]{display:none !important;}
 
   /* ---------- EXPERIENCE ---------- */
   .experience{padding:130px 0;background:var(--obsidian-2);}
@@ -338,6 +308,9 @@
   .location-address{color:var(--smoke-dim);line-height:1.7;margin-bottom:26px;}
   .location-map{min-height:430px;border:1px solid var(--line);overflow:hidden;background:#111;}
   .location-map iframe{width:100%;height:100%;min-height:430px;border:0;display:block;filter:grayscale(.2) contrast(1.05);}
+  .location-map-note{margin-top:16px;font-size:0.85rem;color:var(--smoke-dim);}
+  .location-map-placeholder{min-height:430px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:30px;color:var(--smoke-dim);}
+  .location-map-placeholder strong{font-family:var(--display);font-size:1.6rem;font-weight:400;color:var(--smoke);}
 
   /* ---------- FOOTER ---------- */
   footer{background:var(--obsidian-2);padding:90px 0 32px;border-top:1px solid var(--line);}
@@ -366,9 +339,8 @@
     .about-grid{grid-template-columns:1fr;}
     .about-media img{height:400px;}
     .ticket-grid{grid-template-columns:1fr;}
-    .table-grid{grid-template-columns:1fr;}
     .location-grid{grid-template-columns:1fr;}
-    .location-map,.location-map iframe{min-height:340px;}
+    .location-map,.location-map iframe,.location-map-placeholder{min-height:340px;}
     .exp-grid{grid-template-columns:repeat(2,1fr);}
     .footer-grid{grid-template-columns:1fr 1fr;}
   }
@@ -381,6 +353,9 @@
     .about-tag{position:static;margin-top:18px;display:inline-block;}
     .about-media::before{display:none;}
     .hero-meta{gap:24px;}
+    .ticket-top{padding:32px 28px 24px;}
+    .ticket-price{font-size:2.1rem;}
+    .ticket-price sub{white-space:nowrap;}
   }
 
   /* ---------- BOOKING MODAL ---------- */
@@ -417,6 +392,7 @@
     font-size:0.85rem;color:var(--smoke-dim);
   }
   .booking-summary strong{color:var(--smoke);}
+  .booking-summary .booking-total{margin-top:8px;color:var(--gold);font-weight:700;}
   .booking-submit{width:100%;justify-content:center;margin-top:6px;}
   .booking-msg{margin-top:14px;font-size:0.84rem;font-family:var(--mono);text-align:center;display:none;}
   .booking-msg.show{display:block;}
@@ -459,7 +435,6 @@
   <div class="nav-links">
     <a href="#about">About</a>
     <a href="#tickets">Tickets</a>
-    <a href="#tables">Tables</a>
     <a href="#experience">Experience</a>
     <a href="#location">Location</a>
   </div>
@@ -486,14 +461,13 @@
     <p class="hero-sub">One night, an unreasonable amount of Hennessy, and a dance floor you'll swear you don't remember. This is not a party. This is the story you'll be telling for a year.</p>
 
     <div class="hero-meta">
-      <div class="m-block"><div class="m-label">Date</div><div class="m-value">Fri, 11th Sept 2026</div></div>
-      <div class="m-block"><div class="m-label">Venue</div><div class="m-value">Pera lounge East legon, Accra</div></div>
+      <div class="m-block"><div class="m-label">Date</div><div class="m-value">Sat, 28th Nov 2026</div></div>
+      <div class="m-block"><div class="m-label">Venue</div><div class="m-value" data-event-display>Venue details coming soon.</div></div>
       <div class="m-block"><div class="m-label">Time</div><div class="m-value">9:00 PM — Till Sunrise</div></div>
     </div>
 
     <div class="hero-actions">
       <a href="#tickets" class="btn btn-primary">Buy Ticket →</a>
-      <a href="#tables" class="btn btn-outline">Reserve a Table</a>
     </div>
   </div>
 
@@ -517,11 +491,11 @@
         <span class="eyebrow">The Concept</span>
         <h2>Wake up with<br>no regrets.</h2>
         <p><strong>HANGOVER</strong> is Accra's most talked-about night — a curated evening of premium spirits, world-class sound, and a crowd that knows how to dress and how to move. We built this for people who take their nights seriously.</p>
-        <p>From the moment the doors open, every detail — lighting, pour, playlist, table service — is designed to feel effortless and exclusive. No queues for the people who plan ahead. No excuses for the people who don't.</p>
+        <p>From the moment the doors open, every detail — lighting, pour, playlist, service — is designed to feel effortless and exclusive. No queues for the people who plan ahead. No excuses for the people who don't.</p>
         <div class="about-list">
           <div class="item"><span class="dot"></span>Curated DJ line-up all night</div>
           <div class="item"><span class="dot"></span>Premium bottle service</div>
-          <div class="item"><span class="dot"></span>Private VIP lounge access</div>
+          <div class="item"><span class="dot"></span>Private lounge access</div>
           <div class="item"><span class="dot"></span>Professional photography</div>
         </div>
       </div>
@@ -537,129 +511,71 @@
     <div class="section-head reveal">
       <span class="eyebrow">Entry</span>
       <h2>Choose your ticket</h2>
-      <p>General entry gets you in the door. VIP gets you the night everyone will be asking you about.</p>
+      <p>Pick your entry and get the night everyone will be asking you about.</p>
     </div>
-    <div class="ticket-grid">
-      <div class="ticket-card reveal">
+    <div class="ticket-grid" id="ticketGrid">
+
+      <!-- Prices are filled in from the backend (GET /api/tickets); none are hardcoded on this page. -->
+      <div class="ticket-card reveal" data-ticket-card="group_of_6">
+        <div class="ticket-top">
+          <span class="ticket-kind">Best Value · Bring Your Crew</span>
+          <div class="ticket-name">Group of 6</div>
+          <div class="ticket-price"><span data-ticket-price="group_of_6">GHS —</span> <sub data-ticket-unit="group_of_6">/ group</sub></div>
+          <div class="ticket-price-note">One price for all six</div>
+        </div>
+        <div class="stub-line"></div>
+        <ul class="ticket-benefits">
+          <li><span class="check">✓</span> Six people, one booking, one payment</li>
+          <li><span class="check">✓</span> Six separate tickets, one per guest</li>
+          <li><span class="check">✓</span> Each guest checks in on their own</li>
+          <li><span class="check">✓</span> Entry from 9:00 PM</li>
+        </ul>
+        <div class="ticket-bottom"><a href="#" class="btn btn-primary js-open-booking" data-ticket-type="group_of_6">Get Group of 6</a></div>
+      </div>
+
+      <div class="ticket-card reveal reveal-delay-1" data-ticket-card="guys">
         <div class="ticket-top">
           <span class="ticket-kind">General Admission</span>
-          <div class="ticket-name">Regular Ticket</div>
-          <div class="ticket-price">GHS 200 <sub>/ person</sub></div>
+          <div class="ticket-name">Guys</div>
+          <div class="ticket-price"><span data-ticket-price="guys">GHS —</span> <sub data-ticket-unit="guys">/ person</sub></div>
         </div>
         <div class="stub-line"></div>
         <ul class="ticket-benefits">
           <li><span class="check">✓</span> Entry from 9:00 PM</li>
           <li><span class="check">✓</span> Access to main dance floor</li>
-          <li><span class="check">✓</span> One welcome drink</li>
-          <li><span class="check">✓</span> Standard bar access</li>
+          <li><span class="check">✓</span> One ticket per person</li>
         </ul>
-        <div class="ticket-bottom"><a href="#" class="btn btn-outline js-open-booking" data-ticket-type="regular">Get Regular Ticket</a></div>
+        <div class="ticket-bottom"><a href="#" class="btn btn-outline js-open-booking" data-ticket-type="guys">Get Guys Ticket</a></div>
       </div>
-      <div class="ticket-card vip reveal reveal-delay-1">
+
+      <div class="ticket-card reveal" data-ticket-card="girls">
         <div class="ticket-top">
-          <span class="ticket-kind">All Access</span>
-          <div class="ticket-name">VIP Ticket</div>
-          <div class="ticket-price">GHS 300 <sub>/ person</sub></div>
+          <span class="ticket-kind">General Admission</span>
+          <div class="ticket-name">Girls</div>
+          <div class="ticket-price"><span data-ticket-price="girls">GHS —</span> <sub data-ticket-unit="girls">/ person</sub></div>
         </div>
         <div class="stub-line"></div>
         <ul class="ticket-benefits">
-          <li><span class="check">✓</span> Priority entry, no queue</li>
-          <li><span class="check">✓</span> Access to VIP lounge</li>
-          <li><span class="check">✓</span> Two premium drinks included</li>
-          <li><span class="check">✓</span> Dedicated host on arrival</li>
-          <li><span class="check">✓</span> Complimentary coat check</li>
+          <li><span class="check">✓</span> Entry from 9:00 PM</li>
+          <li><span class="check">✓</span> Access to main dance floor</li>
+          <li><span class="check">✓</span> One ticket per person</li>
         </ul>
-        <div class="ticket-bottom"><a href="#" class="btn btn-primary js-open-booking" data-ticket-type="vip">Get VIP Ticket</a></div>
+        <div class="ticket-bottom"><a href="#" class="btn btn-outline js-open-booking" data-ticket-type="girls">Get Girls Ticket</a></div>
       </div>
 
-      <div class="ticket-card vip reveal reveal-delay-1">
+      <div class="ticket-card reveal reveal-delay-1" data-ticket-card="late_bird">
         <div class="ticket-top">
-          <span class="ticket-kind">All Access</span>
-          <div class="ticket-name">VVIP Ticket</div>
-          <div class="ticket-price">GHS 800 <sub>/ person</sub></div>
+          <span class="ticket-kind">Gate · Everybody</span>
+          <div class="ticket-name">Late Bird</div>
+          <div class="ticket-price"><span data-ticket-price="late_bird">GHS —</span> <sub data-ticket-unit="late_bird">/ person</sub></div>
         </div>
         <div class="stub-line"></div>
-          <ul class="ticket-benefits">
-            <li><span class="check">✓</span> Priority entry, no queue</li>
-            <li><span class="check">✓</span> Access to VVIP lounge</li>
-            <li><span class="check">✓</span> Extra premium drinks included</li>
-            <li><span class="check">✓</span> Dedicated host on arrival</li>
-            <li><span class="check">✓</span> Complimentary coat check</li>
-          </ul>
-        <div class="ticket-bottom"><a href="#" class="btn btn-primary js-open-booking" data-ticket-type="vvip">Get VVIP Ticket</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TABLES -->
-<section class="tables" id="tables">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <span class="eyebrow">Table Reservations</span>
-      <h2>Reserve your table</h2>
-      <p>Skip the bar. Own your corner of the room with bottle service and a table built for the whole crew.</p>
-    </div>
-    <div class="table-grid">
-
-      <div class="table-card reveal">
-        <div class="table-img">
-          <span class="table-badge">Premium</span>
-          <img src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=700&q=80" alt="Premium VIP table with bottle service">
-        </div>
-        <div class="table-body">
-          <div class="table-name">Premium Table</div>
-          <div class="table-price">GHS 5,000</div>
-          <ul class="table-includes">
-            <li>Hennessy VS or Martell Blue Swift</li>
-            <li>Shisha x2</li>
-            <li>Water x5</li>
-            <li>Coke x4</li>
-            <li>Spring Roll x1</li>
-            <li>Samosa x1</li>
-            <li>Chicken Wings x1</li>
-            <li><strong>3 free tickets</strong></li>
-          </ul>
-          <a href="#" class="btn btn-primary js-open-booking" data-ticket-type="vip" data-table-package="premium">Reserve Premium</a>
-        </div>
-      </div>
-
-      <div class="table-card reveal reveal-delay-1">
-        <div class="table-img">
-          <span class="table-badge">Luxury</span>
-          <img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=700&q=80" alt="Luxury table with champagne service">
-        </div>
-        <div class="table-body">
-          <div class="table-name">Luxury Table</div>
-          <div class="table-price">GHS 3,500</div>
-          <ul class="table-includes">
-            <li>Belaire Rosé</li>
-            <li>Shisha x1</li>
-            <li>Chicken Wings x1</li>
-            <li>Spring Rolls x1</li>
-            <li>Water x4</li>
-            <li><strong>2 free tickets</strong></li>
-          </ul>
-          <a href="#" class="btn btn-outline js-open-booking" data-ticket-type="vip" data-table-package="luxury">Reserve Luxury</a>
-        </div>
-      </div>
-
-      <div class="table-card reveal reveal-delay-2">
-        <div class="table-img">
-          <span class="table-badge">Standard</span>
-          <img src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=700&q=80" alt="Standard table with wine service">
-        </div>
-        <div class="table-body">
-          <div class="table-name">Standard Table</div>
-          <div class="table-price">GHS 2,500</div>
-          <ul class="table-includes">
-            <li>Wine</li>
-            <li>Water x3</li>
-            <li>Full Chicken x1</li>
-            <li><strong>1 free ticket</strong></li>
-          </ul>
-          <a href="#" class="btn btn-outline js-open-booking" data-ticket-type="regular" data-table-package="standard">Reserve Standard</a>
-        </div>
+        <ul class="ticket-benefits">
+          <li><span class="check">✓</span> Open to everybody</li>
+          <li><span class="check">✓</span> Entry from 9:00 PM</li>
+          <li><span class="check">✓</span> Access to main dance floor</li>
+        </ul>
+        <div class="ticket-bottom"><a href="#" class="btn btn-outline js-open-booking" data-ticket-type="late_bird">Get Late Bird Ticket</a></div>
       </div>
 
     </div>
@@ -693,11 +609,11 @@
       </div>
     </div>
     <div class="exp-card reveal reveal-delay-2">
-      <img src="img2.jpg" alt="VIP lounge guests toasting">
+      <img src="img2.jpg" alt="Guests toasting in the lounge">
       <div class="exp-content">
         <span class="exp-num">Access</span>
-        <div class="exp-title">VIP Experience</div>
-        <div class="exp-desc">A private lounge, dedicated hosts, and a table with your name on it.</div>
+        <div class="exp-title">The Experience</div>
+        <div class="exp-desc">A private lounge, dedicated hosts, and a night with your name on it.</div>
       </div>
     </div>
     <div class="exp-card reveal reveal-delay-3">
@@ -722,12 +638,18 @@
     <div class="location-grid">
       <div class="location-card reveal">
         <span class="eyebrow">Venue</span>
-        <div class="location-name">Pera Lounge East Legon</div>
-        <p class="location-address">Pera lounge East legon, Accra</p>
-        <a class="btn btn-primary" href="https://www.google.com/maps/search/?api=1&query=Pera+Lounge+East+Legon+Accra" target="_blank" rel="noopener">Get Directions →</a>
+        <!-- Filled from the central event location (GET /api/event/location). -->
+        <div class="location-name" data-event-venue-name>Venue details coming soon.</div>
+        <p class="location-address" data-event-address hidden></p>
+        <a class="btn btn-primary" data-event-directions href="#" target="_blank" rel="noopener" hidden>Get Directions →</a>
+        <p class="location-map-note" data-event-map-note hidden></p>
       </div>
       <div class="location-map reveal reveal-delay-1">
-        <iframe src="https://www.google.com/maps?q=Pera+Lounge+East+Legon+Accra&output=embed" loading="lazy" allowfullscreen title="Map showing Pera Lounge East Legon, Accra"></iframe>
+        <iframe data-event-map loading="lazy" allowfullscreen title="Map of the event venue" hidden></iframe>
+        <div class="location-map-placeholder" data-event-map-placeholder>
+          <strong data-event-message>Venue details coming soon.</strong>
+          <span>We will announce the venue and directions here as soon as they are confirmed.</span>
+        </div>
       </div>
     </div>
   </div>
@@ -739,7 +661,7 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="logo">HANG<span>OVER</span></div>
-        <p>Accra's premium night out. Tickets, tables, and a night you'll spend the next day talking about.</p>
+        <p>Accra's premium night out. Tickets and a night you'll spend the next day talking about.</p>
         <div class="socials">
           <a href="#" aria-label="Instagram">IG</a>
           <a href="#" aria-label="TikTok">TT</a>
@@ -751,13 +673,12 @@
         <h4>Event</h4>
         <a href="#about">About</a>
         <a href="#tickets">Tickets</a>
-        <a href="#tables">Tables</a>
         <a href="#location">Location</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
         <p>+233 20 956 6474</p>
-        <p>Pera lounge East legon, Accra</p>
+        <p data-event-display>Venue details coming soon.</p>
       </div>
       <div class="footer-col">
         <h4>Admin</h4>
@@ -819,7 +740,7 @@
   <div class="booking-modal">
     <button class="booking-close" id="bookingClose" aria-label="Close">&times;</button>
     <h3 id="bookingTitle">Book Your Spot</h3>
-    <span class="booking-sub" id="bookingSubtitle">HANGOVER · Fri, 11th Sept 2026</span>
+    <span class="booking-sub" id="bookingSubtitle">HANGOVER · Sat, 28th Nov 2026</span>
 
     <div class="booking-summary" id="bookingSummary"></div>
 
@@ -842,16 +763,6 @@
       <div class="b-field" id="bQuantityField">
         <label for="bQuantity">Number of Tickets</label>
         <input type="number" id="bQuantity" min="1" max="20" value="1">
-      </div>
-
-      <div class="b-field" id="bTableNumberField" style="display:none;">
-        <label for="bTableNumber">Table Number</label>
-        <select id="bTableNumber"></select>
-      </div>
-
-      <div class="b-field" id="bDrinkField" style="display:none;">
-        <label for="bDrink">Drink Choice</label>
-        <input type="text" id="bDrink" placeholder="e.g. Hennessy VS">
       </div>
 
       <button type="submit" class="btn btn-primary booking-submit" id="bookingSubmitBtn">Continue to Payment →</button>
@@ -886,18 +797,87 @@
 <script>
   /* ------------------------------------------------------------------
      BOOKING FLOW — talks to the Express/SQLite backend in /api.
-     Buttons across the Tickets and Tables sections open this shared
+     Buttons in the Tickets section open this shared
      modal (via .js-open-booking), collect guest details, create the
      booking, and show the correct manual Mobile Money payment instructions.
   ------------------------------------------------------------------ */
   const API_BASE = '/api';
 
-  const TICKET_PRICES = { regular: 200, vip: 300, vvip: 800 };
-  const TABLE_PACKAGES = {
-    premium: { label: 'Premium Table', price: 5000 },
-    luxury:  { label: 'Luxury Table',  price: 3500 },
-    standard:{ label: 'Standard Table',price: 2500 },
-  };
+  // Ticket prices are NEVER defined in the browser. They come from the backend
+  // (GET /api/tickets), and the backend re-calculates every booking itself, so
+  // nothing done in this page can change what a customer is charged.
+  let ticketCatalog = {};
+  const money = (n) => `GHS ${Number(n).toLocaleString()}`;
+
+  function renderTicketCatalog(){
+    Object.values(ticketCatalog).forEach(t => {
+      document.querySelectorAll(`[data-ticket-price="${t.key}"]`).forEach(el => { el.textContent = money(t.price); });
+      document.querySelectorAll(`[data-ticket-unit="${t.key}"]`).forEach(el => {
+        el.textContent = t.pricingUnit === 'group' ? `/ group of ${t.attendeesPerUnit}` : '/ person';
+      });
+    });
+    // hide cards for categories the backend is not currently selling
+    document.querySelectorAll('[data-ticket-card]').forEach(card => {
+      card.hidden = !ticketCatalog[card.dataset.ticketCard];
+    });
+  }
+
+  const ticketCatalogReady = fetch(`${API_BASE}/tickets`)
+    .then(r => r.json())
+    .then(data => {
+      if(!data.success) throw new Error('catalog unavailable');
+      ticketCatalog = Object.fromEntries(data.tickets.map(t => [t.key, t]));
+      renderTicketCatalog();
+    })
+    .catch(() => {
+      const grid = document.getElementById('ticketGrid');
+      if(grid && !grid.querySelector('.tickets-error')){
+        const note = document.createElement('div');
+        note.className = 'tickets-error';
+        note.textContent = 'Ticket prices are temporarily unavailable. Please refresh the page in a moment.';
+        grid.prepend(note);
+      }
+    });
+
+  // ---- Event location: one central source (config/event-location.json via the API) ----
+  function setAll(selector, fn){ document.querySelectorAll(selector).forEach(fn); }
+
+  function applyEventLocation(loc){
+    const confirmed = !!(loc && loc.confirmed);
+    const comingSoon = (loc && loc.message) || 'Venue details coming soon.';
+
+    setAll('[data-event-display]', el => { el.textContent = confirmed ? loc.displayText : comingSoon; });
+    setAll('[data-event-venue-name]', el => { el.textContent = confirmed ? loc.venueName : comingSoon; });
+    setAll('[data-event-message]', el => { el.textContent = comingSoon; });
+    setAll('[data-event-address]', el => {
+      el.textContent = confirmed ? loc.address : '';
+      el.hidden = !(confirmed && loc.address);
+    });
+    setAll('[data-event-directions]', el => {
+      if(confirmed && loc.directionsUrl){ el.href = loc.directionsUrl; el.hidden = false; }
+      else { el.removeAttribute('href'); el.hidden = true; }
+    });
+    setAll('[data-event-map-note]', el => {
+      el.textContent = confirmed ? (loc.mapNote || '') : '';
+      el.hidden = !(confirmed && loc.mapNote);
+    });
+    setAll('[data-event-map]', el => {
+      if(confirmed && loc.embedUrl){
+        el.title = loc.mapNote || 'Map of the event venue';
+        if(el.getAttribute('src') !== loc.embedUrl) el.src = loc.embedUrl;
+        el.hidden = false;
+      } else {
+        el.removeAttribute('src');
+        el.hidden = true;
+      }
+    });
+    setAll('[data-event-map-placeholder]', el => { el.hidden = confirmed && !!loc.embedUrl; });
+  }
+
+  fetch(`${API_BASE}/event/location`)
+    .then(r => r.json())
+    .then(data => applyEventLocation(data && data.location))
+    .catch(() => applyEventLocation(null)); // safe default: "Venue details coming soon."
 
   const overlay = document.getElementById('bookingOverlay');
   const closeBtn = document.getElementById('bookingClose');
@@ -905,13 +885,10 @@
   const titleEl = document.getElementById('bookingTitle');
   const summaryEl = document.getElementById('bookingSummary');
   const quantityField = document.getElementById('bQuantityField');
-  const tableNumberField = document.getElementById('bTableNumberField');
-  const tableNumberSelect = document.getElementById('bTableNumber');
-  const drinkField = document.getElementById('bDrinkField');
   const submitBtn = document.getElementById('bookingSubmitBtn');
   const msgEl = document.getElementById('bookingMsg');
 
-  let currentSelection = { ticketType: 'regular', tablePackage: null };
+  let currentSelection = { ticketType: null };
   let currentBookingId = null;
   let paymentPollTimer = null;
 
@@ -945,39 +922,56 @@
     }
   }
 
-  async function openBookingModal(ticketType, tablePackage){
-    currentSelection = { ticketType, tablePackage };
+  const quantityInput = document.getElementById('bQuantity');
+
+  // Display-only running total. The backend recalculates the real amount.
+  function updateTicketTotal(){
+    const def = ticketCatalog[currentSelection.ticketType];
+    if(!def || def.pricingUnit === 'group') return;
+    let qty = parseInt(quantityInput.value, 10);
+    if(!(qty >= 1)) qty = 1;
+    qty = Math.min(qty, def.maxQuantity || 20);
+    summaryEl.innerHTML = `<strong>${def.label}</strong> — ${money(def.price)} / person` +
+      `<div class="booking-total">${qty} × ${money(def.price)} = ${money(def.price * qty)}</div>`;
+  }
+  quantityInput.addEventListener('input', updateTicketTotal);
+
+  async function openBookingModal(ticketType){
+    currentSelection = { ticketType };
     clearMsg();
     resetPaymentPanel();
     form.reset();
+    // a previous booking attempt leaves the button disabled; start fresh each time
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Continue to Payment →';
 
-    if(tablePackage){
-      const pkg = TABLE_PACKAGES[tablePackage];
-      titleEl.textContent = `Reserve a ${pkg.label}`;
-      quantityField.style.display = 'none';
-      tableNumberField.style.display = 'block';
-      drinkField.style.display = 'block';
-      const freeTickets = { premium: 3, luxury: 2, standard: 1 }[tablePackage] || 0;
-      summaryEl.innerHTML = `<strong>${pkg.label}</strong> — GHS ${pkg.price.toLocaleString()}<br><span style="color:var(--gold);font-weight:700;">Includes ${freeTickets} free ticket${freeTickets === 1 ? '' : 's'}.</span>`;
-
-      tableNumberSelect.innerHTML = '<option>Loading available tables…</option>';
-      try{
-        const res = await fetch(`${API_BASE}/tables`);
-        const data = await res.json();
-        const available = (data.packages && data.packages[tablePackage] && data.packages[tablePackage].availableTables) || [];
-        tableNumberSelect.innerHTML = available.length
-          ? available.map(t => `<option value="${t}">${t}</option>`).join('')
-          : '<option value="">No tables currently available</option>';
-      }catch(err){
-        tableNumberSelect.innerHTML = '<option value="">Unable to load tables — try again shortly</option>';
+    {
+      await ticketCatalogReady;
+      const def = ticketCatalog[ticketType];
+      if(!def){
+        titleEl.textContent = 'Tickets unavailable';
+        quantityField.style.display = 'none';
+        summaryEl.textContent = 'Ticket prices could not be loaded. Please close this window and refresh the page.';
+        submitBtn.disabled = true;
+        overlay.classList.add('open');
+        return;
       }
-    } else {
-      const price = TICKET_PRICES[ticketType];
-      titleEl.textContent = ticketType === 'vip' ? 'Get Your VIP Ticket' : 'Get Your Regular Ticket';
-      quantityField.style.display = 'block';
-      tableNumberField.style.display = 'none';
-      drinkField.style.display = 'none';
-      summaryEl.innerHTML = `<strong>${ticketType === 'vip' ? 'VIP Ticket' : 'Regular Ticket'}</strong> — GHS ${price} / person`;
+      submitBtn.disabled = false;
+      const isGroup = def.pricingUnit === 'group';
+      titleEl.textContent = isGroup ? `Get Your ${def.label}` : `Get Your ${def.label} Ticket`;
+
+      if(isGroup){
+        // A group is always one booking for exactly six people at one total price.
+        quantityField.style.display = 'none';
+        summaryEl.innerHTML = `<strong>${def.label}</strong> — ${money(def.price)} total for ${def.attendeesPerUnit} people<br>` +
+          `<span style="color:var(--gold);font-weight:700;">You will receive ${def.attendeesPerUnit} separate tickets, one per guest.</span>`;
+      } else {
+        quantityField.style.display = 'block';
+        quantityInput.min = 1;
+        quantityInput.max = def.maxQuantity || 20;
+        quantityInput.value = 1;
+        updateTicketTotal();
+      }
     }
 
     overlay.classList.add('open');
@@ -996,10 +990,8 @@
     form.style.display = 'none';
     document.getElementById('momoPaymentPanel').classList.add('show');
 
-    const isTable = payment.destinationType === 'table';
-    document.getElementById('momoPaymentNote').textContent = isTable
-      ? 'This table reservation is paid directly to the manager’s Mobile Money account.'
-      : 'This ticket payment is paid directly to the event ticket payment account.';
+    document.getElementById('momoPaymentNote').textContent =
+      'This ticket payment is paid directly to the event ticket payment account.';
 
     document.getElementById('momoNetwork').textContent = payment.network || 'Mobile Money';
     document.getElementById('momoNumber').textContent = payment.number || 'Payment number not configured';
@@ -1007,7 +999,9 @@
     document.getElementById('momoAmount').textContent = `GHS ${Number(payment.amount).toLocaleString()}`;
     const includedTicketsEl = document.getElementById('momoIncludedTickets');
     if(includedTicketsEl){
-      includedTicketsEl.textContent = payment.includedFreeTickets ? `Includes ${payment.includedFreeTickets} free ticket${payment.includedFreeTickets === 1 ? '' : 's'}.` : '';
+      includedTicketsEl.textContent = payment.attendees > 1
+        ? `You will receive ${payment.attendees} separate tickets once your payment is confirmed.`
+        : '';
     }
 
     if(!payment.number){
@@ -1019,7 +1013,7 @@
   document.querySelectorAll('.js-open-booking').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.preventDefault();
-      openBookingModal(btn.dataset.ticketType, btn.dataset.tablePackage || null);
+      openBookingModal(btn.dataset.ticketType);
     });
   });
   closeBtn.addEventListener('click', closeBookingModal);
@@ -1033,19 +1027,15 @@
       guestName: document.getElementById('bGuestName').value.trim(),
       phoneNumber: document.getElementById('bPhone').value.trim(),
       email: document.getElementById('bEmail').value.trim(),
-      ticketType: currentSelection.ticketType,
     };
 
-    if(currentSelection.tablePackage){
-      payload.tablePackage = currentSelection.tablePackage;
-      payload.tableNumber = tableNumberSelect.value;
-      payload.drinkChoice = document.getElementById('bDrink').value.trim();
-      if(!payload.tableNumber){
-        showMsg('Please select an available table.', 'error');
-        return;
+    {
+      // Only the category and how many people; the server decides the price.
+      payload.ticketType = currentSelection.ticketType;
+      const def = ticketCatalog[currentSelection.ticketType];
+      if(def && def.pricingUnit !== 'group'){
+        payload.quantity = parseInt(quantityInput.value, 10) || 1;
       }
-    } else {
-      payload.quantity = parseInt(document.getElementById('bQuantity').value, 10) || 1;
     }
 
     submitBtn.disabled = true;

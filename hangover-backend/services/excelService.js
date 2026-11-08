@@ -3,6 +3,7 @@ const path = require('path');
 const ExcelJS = require('exceljs');
 const { listBookings } = require('../models/Booking');
 const { db } = require('../database/db');
+const { labelFor } = require('./pricingService');
 
 const EXPORTS_DIR = path.resolve(process.cwd(), 'exports');
 if (!fs.existsSync(EXPORTS_DIR)) fs.mkdirSync(EXPORTS_DIR, { recursive: true });
@@ -14,11 +15,10 @@ const COLUMNS = [
   { header: 'Guest Name', key: 'guest_name', width: 24 },
   { header: 'Phone Number', key: 'phone_number', width: 16 },
   { header: 'Email', key: 'email', width: 26 },
-  { header: 'Ticket Type', key: 'ticket_type', width: 14 },
-  { header: 'Table Package', key: 'table_package', width: 16 },
-  { header: 'Table Number', key: 'table_number', width: 14 },
-  { header: 'Drink Choice', key: 'drink_choice', width: 20 },
-  { header: 'Seats', key: 'seats', width: 8 },
+  { header: 'Ticket Type', key: 'ticket_label', width: 28 },
+  { header: 'Tickets', key: 'quantity', width: 10 },
+  { header: 'Tickets Issued', key: 'tickets_issued', width: 14 },
+  { header: 'Unit Price', key: 'unit_price_label', width: 18 },
   { header: 'Amount Due', key: 'amount_due', width: 14 },
   { header: 'Amount Paid', key: 'amount_paid', width: 14 },
   { header: 'Payment Method', key: 'payment_method', width: 16 },
@@ -55,10 +55,62 @@ async function generateGuestListExcel() {
     cell.font = { bold: true, color: { argb: 'FFEDE8E2' } };
   });
 
+  const attendeeSummary = db.prepare(
+    `SELECT COUNT(*) AS total, COALESCE(SUM(checked_in), 0) AS checkedIn FROM attendee_tickets WHERE booking_id = ?`
+  );
+
   for (const b of bookings) {
+    const a = attendeeSummary.get(b.booking_id);
+    const unitPriceLabel = b.price_unit
+      ? `GHS ${Number(b.unit_price)} ${b.price_unit === 'group' ? 'per group' : 'per person'}`
+      : '';
     sheet.addRow({
       ...b,
-      checked_in_label: b.checked_in ? 'Yes' : 'No',
+      ticket_label: labelFor(b.ticket_type),
+      tickets_issued: a.total || '',
+      unit_price_label: unitPriceLabel,
+      // Per-attendee bookings show how many of their tickets are checked in (e.g. 2/6).
+      checked_in_label: a.total ? `${a.checkedIn}/${a.total}` : b.checked_in ? 'Yes' : 'No',
+    });
+  }
+
+  // One row per individual attendee ticket, so door staff can work from a flat list.
+  const ticketSheet = workbook.addWorksheet('Attendee Tickets', {
+    views: [{ state: 'frozen', ySplit: 1 }],
+  });
+  ticketSheet.columns = [
+    { header: 'Ticket ID', key: 'ticket_id', width: 18 },
+    { header: 'Ticket #', key: 'number', width: 10 },
+    { header: 'Booking ID', key: 'booking_id', width: 18 },
+    { header: 'Booked By', key: 'guest_name', width: 24 },
+    { header: 'Phone Number', key: 'phone_number', width: 16 },
+    { header: 'Category', key: 'category', width: 28 },
+    { header: 'Payment Status', key: 'payment_status', width: 14 },
+    { header: 'Checked In', key: 'checked_in_label', width: 12 },
+    { header: 'Checked In At', key: 'checked_in_at', width: 20 },
+  ];
+  ticketSheet.getRow(1).eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFEDE8E2' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF151217' } };
+  });
+  const attendeeRows = db
+    .prepare(
+      `SELECT t.*, b.phone_number, b.payment_status
+       FROM attendee_tickets t JOIN bookings b ON b.booking_id = t.booking_id
+       ORDER BY datetime(b.booking_date) DESC, t.booking_id, t.attendee_number`
+    )
+    .all();
+  for (const t of attendeeRows) {
+    ticketSheet.addRow({
+      ticket_id: t.ticket_id,
+      number: `${t.attendee_number} of ${t.attendee_total}`,
+      booking_id: t.booking_id,
+      guest_name: t.guest_name,
+      phone_number: t.phone_number,
+      category: labelFor(t.ticket_category),
+      payment_status: t.payment_status,
+      checked_in_label: t.checked_in ? 'Yes' : 'No',
+      checked_in_at: t.checked_in_at || '',
     });
   }
 

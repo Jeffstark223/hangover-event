@@ -1,14 +1,14 @@
 {
   "name": "hangover-backend",
   "version": "1.0.0",
-  "description": "Production backend for HANGOVER event ticketing, table reservations and admin console",
+  "description": "Production backend for HANGOVER event ticketing and admin console",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
     "create-admin": "node scripts/createAdmin.js",
     "reset-admin": "node scripts/resetAdminPassword.js",
-    "seed-tables": "node scripts/seedTables.js"
+    "test": "node --test tests/pricing-and-location.test.js"
   },
   "license": "UNLICENSED",
   "private": true,

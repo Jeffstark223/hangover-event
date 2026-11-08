@@ -6,16 +6,16 @@ function createBooking(data) {
       booking_id, reservation_id, ticket_id,
       guest_name, phone_number, email,
       ticket_type, quantity,
-      table_package, table_number, drink_choice, seats,
       amount_due, amount_paid, currency, payment_status, payment_reference,
-      momo_transaction_id, payment_method
+      momo_transaction_id, payment_method,
+      price_unit, unit_price
     ) VALUES (
       @booking_id, @reservation_id, @ticket_id,
       @guest_name, @phone_number, @email,
       @ticket_type, @quantity,
-      @table_package, @table_number, @drink_choice, @seats,
       @amount_due, @amount_paid, @currency, @payment_status, @payment_reference,
-      @momo_transaction_id, @payment_method
+      @momo_transaction_id, @payment_method,
+      @price_unit, @unit_price
     )
   `);
   stmt.run(data);
@@ -28,14 +28,6 @@ function getByBookingId(bookingId) {
 
 function getByTicketId(ticketId) {
   return db.prepare(`SELECT * FROM bookings WHERE ticket_id = ?`).get(ticketId);
-}
-
-function getFreeTickets(bookingId) {
-  return db.prepare(`
-    SELECT * FROM free_tickets
-    WHERE booking_id = ?
-    ORDER BY id ASC
-  `).all(bookingId);
 }
 
 function getByReservationId(reservationId) {
@@ -134,15 +126,15 @@ function stats() {
   const totalTickets = db
     .prepare(`SELECT COALESCE(SUM(quantity),0) AS n FROM bookings WHERE payment_status = 'Paid'`)
     .get().n;
-  const totalTablesReserved = db
-    .prepare(`SELECT COUNT(*) AS n FROM tables_inventory WHERE status = 'Reserved'`)
-    .get().n;
   const totalRevenue = db
     .prepare(`SELECT COALESCE(SUM(amount_paid),0) AS n FROM bookings WHERE payment_status = 'Paid'`)
     .get().n;
-  const checkedIn = db.prepare(`SELECT COUNT(*) AS n FROM bookings WHERE checked_in = 1`).get().n;
+  // Older single-ticket bookings plus every individually checked-in attendee ticket.
+  const checkedIn =
+    db.prepare(`SELECT COUNT(*) AS n FROM bookings WHERE checked_in = 1`).get().n +
+    db.prepare(`SELECT COUNT(*) AS n FROM attendee_tickets WHERE checked_in = 1`).get().n;
 
-  return { totalTickets, totalTablesReserved, totalRevenue, checkedIn };
+  return { totalTickets, totalRevenue, checkedIn };
 }
 
 function recordPaymentEvent(bookingId, eventType, rawPayload) {
@@ -155,7 +147,6 @@ module.exports = {
   createBooking,
   getByBookingId,
   getByTicketId,
-  getFreeTickets,
   getByReservationId,
   getByPaymentReference,
   setPaymentStatus,

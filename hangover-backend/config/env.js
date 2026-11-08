@@ -33,11 +33,6 @@ const config = {
       number: process.env.TICKET_MOMO_NUMBER || '',
       name: process.env.TICKET_MOMO_NAME || '',
     },
-    table: {
-      network: process.env.TABLE_MOMO_NETWORK || '',
-      number: process.env.TABLE_MOMO_NUMBER || '',
-      name: process.env.TABLE_MOMO_NAME || '',
-    },
   },
 
   email: {

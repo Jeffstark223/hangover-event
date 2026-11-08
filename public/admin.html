@@ -527,7 +527,7 @@ button{
 .stats{
   display:grid;
 
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(3,1fr);
 
   gap:20px;
 
@@ -861,18 +861,6 @@ tbody tr:hover{
   color:var(--bad);
 }
 
-/* ============================================================
-   TABLE RESERVATION
-============================================================ */
-
-.res-grid{
-  display:grid;
-
-  grid-template-columns:repeat(3,1fr);
-
-  gap:18px;
-}
-
 .res-group{
   background:var(--obsidian);
 
@@ -1143,10 +1131,6 @@ tbody tr:hover{
     grid-template-columns:repeat(2,1fr);
   }
 
-  .res-grid{
-    grid-template-columns:1fr;
-  }
-
 }
 
 @media (max-width:600px){
@@ -1373,23 +1357,6 @@ tbody tr:hover{
       </div>
 
 
-      <div class="stat-card gold reveal in rd1">
-
-        <div class="stat-label">
-          Total Tables Reserved
-        </div>
-
-        <div class="stat-value">
-          0
-        </div>
-
-        <div class="stat-sub">
-          No data available
-        </div>
-
-      </div>
-
-
       <div class="stat-card violet reveal in rd2">
 
         <div class="stat-label">
@@ -1483,15 +1450,11 @@ tbody tr:hover{
                 </th>
 
                 <th>
-                  Table Package
+                  Tickets
                 </th>
 
                 <th>
-                  Table Number
-                </th>
-
-                <th>
-                  Amount
+                  Amount Due / Paid
                 </th>
 
                 <th>
@@ -1596,43 +1559,6 @@ tbody tr:hover{
 
     </div>
 
-
-    <!-- ========================================================
-         TABLE RESERVATION MANAGEMENT
-    ========================================================= -->
-
-    <div class="panel reveal in">
-
-      <div class="panel-head">
-
-        <div>
-
-          <span class="eyebrow">
-            Floor Plan
-          </span>
-
-          <h2>
-            Table Reservation Management
-          </h2>
-
-        </div>
-
-      </div>
-
-
-      <div class="panel-body">
-
-        <div
-          class="res-grid"
-          id="resGrid"
-        ></div>
-
-      </div>
-
-    </div>
-
-  </div>
-
 </div>
 
 
@@ -1667,7 +1593,7 @@ tbody tr:hover{
    5. Payment confirmation
    6. Ticket verification
    7. Guest check-in
-   8. Table reservation management
+   8. Individual ticket IDs per booking
    9. Excel export
    10. Browser notifications
    11. On-screen purchase notifications
@@ -2488,8 +2414,6 @@ async function loadDashboardStats(){
 
     stats.totalTickets || 0,
 
-    stats.totalTablesReserved || 0,
-
     `GHS ${totalRevenue.toLocaleString()}`,
 
     stats.checkedIn || 0
@@ -2735,6 +2659,14 @@ async function loadBookings(){
                 ${escapeHtml(
                   b.ticket_id
                 )}
+                ${
+                  b.attendee_total > 1
+                    ? `<br><small style="opacity:.75;">${b.attendee_total} tickets</small>
+                       <br><button class="btn btn-outline js-view-tickets"
+                         data-booking-id="${escapeHtml(b.booking_id)}"
+                         style="padding:4px 10px;font-size:11px;margin-top:4px;">View tickets</button>`
+                    : ''
+                }
               </td>
 
               <td>
@@ -2751,26 +2683,24 @@ async function loadBookings(){
 
               <td>
                 ${escapeHtml(
+                  b.ticket_label ||
                   b.ticket_type
                 )}
               </td>
 
               <td>
                 ${escapeHtml(
-                  b.table_package ||
-                  '—'
-                )}
-              </td>
-
-              <td>
-                ${escapeHtml(
-                  b.table_number ||
-                  '—'
+                  b.quantity
                 )}
               </td>
 
               <td>
                 GHS ${amount}
+                ${
+                  b.payment_status === 'Paid'
+                    ? `<br><small style="opacity:.75;">Paid: GHS ${Number(b.amount_paid || 0).toLocaleString()}</small>`
+                    : ''
+                }
               </td>
 
               <td>
@@ -2792,7 +2722,14 @@ async function loadBookings(){
               <td>
 
                 ${
-                  b.checked_in
+                  b.attendee_total > 0
+
+                    ? `<span style="
+                          font-weight:700;
+                          color:${b.attendee_checked_in === b.attendee_total ? '#4caf6d' : 'inherit'};
+                        ">${b.attendee_checked_in}/${b.attendee_total} Checked In</span>`
+
+                  : b.checked_in
 
                     ? `
 
@@ -2828,6 +2765,56 @@ async function loadBookings(){
 
 
   /* ------------------------------------------------------------
+     VIEW INDIVIDUAL TICKETS (group / per-person bookings)
+  ------------------------------------------------------------ */
+
+  document
+    .querySelectorAll('.js-view-tickets')
+    .forEach(
+      btn => {
+
+        btn.addEventListener(
+          'click',
+          async () => {
+
+            try{
+
+              const data =
+                await api(
+                  `/admin/bookings/${encodeURIComponent(
+                    btn.dataset.bookingId
+                  )}`
+                );
+
+              const lines =
+                (data.attendeeTickets || [])
+                  .map(
+                    t =>
+                      `${t.attendee_number}/${t.attendee_total}  ${t.ticket_id}  ${
+                        t.checked_in
+                          ? '✓ checked in'
+                          : '— not checked in'
+                      }`
+                  );
+
+              alert(
+                `${data.booking.ticket_label} — ${data.booking.guest_name}\n\n${lines.join('\n')}`
+              );
+
+            }catch(err){
+
+              alert(err.message);
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+
+  /* ------------------------------------------------------------
      PAYMENT CONFIRMATION BUTTONS
   ------------------------------------------------------------ */
 
@@ -2846,9 +2833,24 @@ async function loadBookings(){
               btn.dataset.bookingId;
 
 
+            const row =
+              bookings.find(
+                x =>
+                  x.booking_id ===
+                  bookingId
+              );
+
+            const detail =
+              row
+                ? `\n\n${row.ticket_label || row.ticket_type} — GHS ${Number(row.amount_due).toLocaleString()}` +
+                  ` (${row.quantity} ticket${row.quantity === 1 ? '' : 's'})`
+                : '';
+
             if(
               !confirm(
-                'Confirm that this Mobile Money transaction has been received?'
+                'Confirm that this Mobile Money transaction has been received?' +
+                detail +
+                '\n\nCheck that the amount received matches exactly.'
               )
             ){
 
@@ -2881,14 +2883,14 @@ async function loadBookings(){
                 );
 
 
-              const freeIds =
+              const attendeeIds =
                 (
-                  data.freeTickets ||
+                  data.attendeeTickets ||
                   []
                 )
                   .map(
                     ticket =>
-                      ticket.ticket_id
+                      `${ticket.attendee_number}/${ticket.attendee_total}  ${ticket.ticket_id}`
                   );
 
 
@@ -2898,13 +2900,13 @@ async function loadBookings(){
 
                 (
 
-                  freeIds.length
+                  attendeeIds.length
 
-                    ? `\n\nFree tickets generated (${freeIds.length}):\n${freeIds.join('\n')}`
+                    ? `\n\nTickets generated (${attendeeIds.length}):\n${attendeeIds.join('\n')}`
 
                     : ''
 
-                )
+              )
 
               );
 
@@ -2914,8 +2916,6 @@ async function loadBookings(){
                 loadBookings(),
 
                 loadDashboardStats(),
-
-                loadTableFloor()
 
               ]);
 
@@ -3017,14 +3017,14 @@ verifyBtn.addEventListener(
         result.booking;
 
 
-      const isFree =
+      const isAttendee =
         result.ticketType ===
-        'table_free';
+        'attendee';
 
 
       const target =
-        isFree
-          ? result.freeTicket
+        isAttendee
+          ? result.attendeeTicket
           : booking;
 
 
@@ -3043,18 +3043,16 @@ verifyBtn.addEventListener(
 
         <strong>
           ${escapeHtml(
-            isFree
-              ? 'Table Guest'
-              : booking.guest_name
+            booking.guest_name
           )}
         </strong>
 
         —
 
         ${escapeHtml(
-          isFree
-            ? 'TABLE FREE TICKET'
-            : booking.ticket_type.toUpperCase()
+          isAttendee
+            ? `${booking.ticket_label} — TICKET ${target.attendee_number} OF ${target.attendee_total}`
+            : (booking.ticket_label || booking.ticket_type).toUpperCase()
         )}
 
         —
@@ -3064,31 +3062,6 @@ verifyBtn.addEventListener(
         )}
 
         ${alreadyIn}
-
-        ${
-          isFree
-
-            ? `
-
-              <br>
-
-              <span
-                style="
-                  color:#d4af6a;
-                "
-              >
-                Included with table
-                ${escapeHtml(
-                  booking.table_number ||
-                  ''
-                )}
-              </span>
-
-            `
-
-            : ''
-        }
-
 
         ${
           target.checked_in
@@ -3223,168 +3196,6 @@ ticketInput.addEventListener(
 
 
 /* ==============================================================
-   TABLE RESERVATION MANAGEMENT
-============================================================== */
-
-const PACKAGE_LABELS = {
-
-  premium:
-    'Premium Tables',
-
-  luxury:
-    'Luxury Tables',
-
-  standard:
-    'Standard Tables'
-
-};
-
-
-async function loadTableFloor(){
-
-  const { tables } =
-    await api(
-      '/admin/tables'
-    );
-
-
-  const grouped = {};
-
-
-  tables.forEach(
-    t => {
-
-      const key =
-        PACKAGE_LABELS[t.package] ||
-        t.package;
-
-
-      grouped[key] =
-        grouped[key] || [];
-
-
-      grouped[key].push(t);
-
-    }
-  );
-
-
-  const grid =
-    document.getElementById(
-      'resGrid'
-    );
-
-
-  if(!grid){
-
-    return;
-
-  }
-
-
-  grid.innerHTML =
-
-    Object.entries(
-      grouped
-    )
-
-      .map(
-        ([group, rows]) => `
-
-          <div class="res-group">
-
-            <div class="res-group-head">
-
-              <h3>
-                ${escapeHtml(group)}
-              </h3>
-
-              <span class="res-count">
-                ${rows.length} tables
-              </span>
-
-            </div>
-
-
-            <div class="res-list">
-
-              ${
-
-                rows
-                  .map(
-                    t => {
-
-                      const available =
-                        t.status ===
-                        'Available';
-
-
-                      return `
-
-                        <div class="res-row">
-
-                          <span class="rname">
-                            ${escapeHtml(
-                              t.table_number
-                            )}
-                          </span>
-
-
-                          <span class="res-guest">
-                            ${escapeHtml(
-                              t.reserved_by ||
-                              '—'
-                            )}
-                          </span>
-
-
-                          <span
-                            class="status-available"
-                            style="${
-                              available
-                                ? ''
-                                : 'color:#e0503c;'
-                            }"
-                          >
-
-                            <span
-                              class="status-dot"
-                              style="${
-                                available
-                                  ? ''
-                                  : 'background:#e0503c;'
-                              }"
-                            ></span>
-
-                            ${escapeHtml(
-                              t.status
-                            )}
-
-                          </span>
-
-                        </div>
-
-                      `;
-
-                    }
-                  )
-                  .join('')
-
-              }
-
-            </div>
-
-          </div>
-
-        `
-      )
-
-      .join('');
-
-}
-
-
-/* ==============================================================
    EXPORT GUEST LIST
 ============================================================== */
 
@@ -3502,9 +3313,7 @@ async function loadEverything(){
 
       loadDashboardStats(),
 
-      loadBookings(),
-
-      loadTableFloor()
+      loadBookings()
 
     ]);
 

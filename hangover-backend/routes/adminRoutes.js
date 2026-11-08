@@ -21,8 +21,6 @@ router.post('/bookings/:bookingId/confirm-payment', adminController.confirmPayme
 router.post('/verify', adminController.verifyTicket);
 router.post('/checkin', adminController.checkIn);
 
-router.get('/tables', adminController.tableFloor);
-
 router.get('/export/guest-list', adminController.exportGuestList);
 
 module.exports = router;

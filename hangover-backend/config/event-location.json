@@ -1,0 +1,25 @@
+{
+  "_readme": [
+    "HANGOVER event location — the ONLY place the venue is defined.",
+    "The homepage, the Event Location section, the Get Directions button, the map, the footer, the PDF tickets and the confirmation emails all read this file.",
+    "Changes apply immediately (no restart needed) as long as the JSON stays valid.",
+    "",
+    "confirmed: true  -> the venue below is shown everywhere.",
+    "confirmed: false -> every page shows comingSoonMessage instead, and the map / Get Directions button are hidden.",
+    "",
+    "venueName + address = the WRITTEN venue shown to guests (e.g. 'Adjirigano, behind Beirut Cafe, Accra, Ghana').",
+    "mapQuery = what the MAP PIN and Get Directions search for. It is kept separate on purpose: here it points at the landmark (Beirut Cafe) itself.",
+    "mapNote = small text shown beside the map explaining what the pin marks.",
+    "directionsUrl / embedUrl: optional full https:// links that override the automatic Google Maps links (e.g. a pinned Google Maps share link of the landmark).",
+    "No GPS coordinates are used or invented."
+  ],
+
+  "confirmed": true,
+  "venueName": "Adjirigano, behind Beirut Cafe",
+  "address": "Accra, Ghana",
+  "mapQuery": "Beirut Cafe, Adjirigano, Accra, Ghana",
+  "mapNote": "The map pin marks Beirut Cafe, the landmark. The venue is behind it.",
+  "directionsUrl": "",
+  "embedUrl": "",
+  "comingSoonMessage": "Venue details coming soon."
+}

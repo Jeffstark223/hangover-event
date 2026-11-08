@@ -43,7 +43,7 @@ const submitMomoPayment = asyncHandler(async (req, res) => {
 
   Booking.recordPaymentEvent(booking.booking_id, 'momo_submitted', {
     transactionId: cleanTransactionId,
-    destinationType: booking.table_number ? 'table' : 'ticket',
+    ticketType: booking.ticket_type,
   });
 
   res.json({

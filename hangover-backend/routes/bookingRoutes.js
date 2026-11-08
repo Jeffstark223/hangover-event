@@ -4,7 +4,6 @@ const path = require('path');
 
 const bookingController = require('../controllers/bookingController');
 const Booking = require('../models/Booking');
-const FreeTicket = require('../models/FreeTicket');
 const { bookingLimiter } = require('../middleware/rateLimiters');
 
 router.post('/', bookingLimiter, bookingController.createBooking);
@@ -30,12 +29,7 @@ router.get('/ticket/:bookingId', (req, res) => {
   res.download(path.resolve(booking.ticket_pdf_path));
 });
 
-// Download an included table free-ticket PDF
-router.get('/free-ticket/:ticketId', (req, res) => {
-  const ticket = FreeTicket.getByTicketId(req.params.ticketId);
-  if (!ticket) return res.status(404).send('Free ticket not found');
-  if (!ticket.ticket_pdf_path) return res.status(404).send('Free ticket has not been generated yet');
-  res.download(path.resolve(ticket.ticket_pdf_path));
-});
+// Download one attendee's ticket PDF
+router.get('/attendee-ticket/:ticketId', bookingController.downloadAttendeeTicket);
 
 module.exports = router;

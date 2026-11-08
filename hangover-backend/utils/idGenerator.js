@@ -24,14 +24,8 @@ function generateTicketId() {
   return `TCK-${randomSegment(10)}`;
 }
 
-/** FREE-XXXXXXXXXX — separate transferable ticket included with a table */
-function generateFreeTicketId() {
-  return `FREE-${randomSegment(10)}`;
-}
-
 module.exports = {
   generateBookingId,
   generateReservationId,
   generateTicketId,
-  generateFreeTicketId,
 };

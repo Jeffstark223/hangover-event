@@ -10,8 +10,8 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 
 const bookingRoutes = require('./routes/bookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-const tableRoutes = require('./routes/tableRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const publicInfoRoutes = require('./routes/publicInfoRoutes');
 
 const app = express();
 
@@ -40,8 +40,8 @@ app.get('/api/health', (req, res) => res.json({ success: true, status: 'ok', env
 
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/tables', tableRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', publicInfoRoutes); // GET /api/tickets, GET /api/event/location
 
 // Serve the existing frontend (index.html / admin.html) as static files.
 app.use(express.static(path.join(__dirname, '..', 'public')));

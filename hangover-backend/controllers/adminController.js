@@ -3,11 +3,11 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const AdminModel = require('../models/Admin');
 const Booking = require('../models/Booking');
-const FreeTicket = require('../models/FreeTicket');
-const TableModel = require('../models/Table');
+const AttendeeTicket = require('../models/AttendeeTicket');
+const attendeeService = require('../services/attendeeService');
+const pricingService = require('../services/pricingService');
+const { present, presentAll } = require('../services/bookingPresenter');
 const pdfService = require('../services/pdfService');
-const { generateFreeTicketId } = require('../utils/idGenerator');
-const tablesConfig = require('../config/tables.config');
 const emailService = require('../services/emailService');
 const excelService = require('../services/excelService');
 const config = require('../config/env');
@@ -48,70 +48,109 @@ const listBookings = asyncHandler(async (req, res) => {
   const bookings = q
     ? Booking.search(String(q))
     : Booking.listBookings({ limit: Number(limit) || 100, offset: Number(offset) || 0 });
-  res.json({ success: true, count: bookings.length, bookings });
+  res.json({ success: true, count: bookings.length, bookings: presentAll(bookings) });
 });
 
-/** GET /api/admin/bookings/:bookingId */
+/** GET /api/admin/bookings/:bookingId — booking plus every individual ticket ID */
 const getBooking = asyncHandler(async (req, res) => {
   const booking = Booking.getByBookingId(req.params.bookingId);
   if (!booking) throw new ApiError(404, 'Booking not found.');
-  res.json({ success: true, booking });
+  res.json({
+    success: true,
+    booking: present(booking),
+    attendeeTickets: AttendeeTicket.listByBookingId(booking.booking_id),
+  });
 });
 
-/** POST /api/admin/verify — search by primary or included free ticket ID */
+/** POST /api/admin/verify — look up any ticket by its own ticket ID */
 const verifyTicket = asyncHandler(async (req, res) => {
   const { ticketId } = req.body;
   if (!ticketId) throw new ApiError(400, 'ticketId is required.');
+  const id = String(ticketId).trim();
 
-  const id = ticketId.trim();
-  const booking = Booking.getByTicketId(id);
-  if (booking) {
-    if (booking.payment_status !== 'Paid') {
-      throw new ApiError(409, `Ticket found but payment status is "${booking.payment_status}", not Paid.`, { booking });
+  // Individual attendee tickets first (attendee #1 shares its ID with the booking's main ticket).
+  const attendee = AttendeeTicket.getByTicketId(id);
+  if (attendee) {
+    const parent = Booking.getByBookingId(attendee.booking_id);
+    if (!parent || parent.payment_status !== 'Paid') {
+      throw new ApiError(409, 'This ticket is linked to a booking that has not been paid.');
     }
-    return res.json({ success: true, ticketType: 'primary', booking, freeTicket: null });
+    return res.json({
+      success: true,
+      ticketType: 'attendee',
+      booking: present(parent),
+      attendeeTicket: attendee,
+      attendeeSummary: AttendeeTicket.summaryForBooking(parent.booking_id),
+    });
   }
 
-  const freeTicket = FreeTicket.getByTicketId(id);
-  if (!freeTicket) throw new ApiError(404, `No ticket found for "${id}".`);
-
-  const parent = Booking.getByBookingId(freeTicket.booking_id);
-  if (!parent || parent.payment_status !== 'Paid') {
-    throw new ApiError(409, 'This free ticket is linked to a table reservation that has not been paid.');
+  // Single tickets issued by older versions of the site.
+  const booking = Booking.getByTicketId(id);
+  if (!booking) throw new ApiError(404, `No ticket found for "${id}".`);
+  if (booking.payment_status !== 'Paid') {
+    throw new ApiError(409, `Ticket found but payment status is "${booking.payment_status}", not Paid.`, { booking: present(booking) });
   }
-
-  res.json({ success: true, ticketType: 'table_free', booking: parent, freeTicket });
+  res.json({ success: true, ticketType: 'primary', booking: present(booking) });
 });
 
 /** POST /api/admin/bookings/:bookingId/confirm-payment
  * Manually confirms a Mobile Money transaction after the organizer has
- * checked the appropriate MoMo account. Ticket generation happens only here.
+ * checked the MoMo account. Ticket generation happens ONLY here, after the
+ * payment has been verified by an administrator.
  */
 const confirmPayment = asyncHandler(async (req, res) => {
   const booking = Booking.getByBookingId(req.params.bookingId);
-
   if (!booking) throw new ApiError(404, 'Booking not found.');
 
   if (booking.payment_status === 'Paid') {
     return res.json({
       success: true,
       message: 'Payment has already been confirmed.',
-      booking,
-      freeTickets: FreeTicket.listByBookingId(booking.booking_id),
+      booking: present(booking),
+      attendeeTickets: AttendeeTicket.listByBookingId(booking.booking_id),
     });
   }
 
   if (!booking.momo_transaction_id) {
     throw new ApiError(409, 'The customer has not submitted a Mobile Money transaction ID yet.');
   }
-
   if (booking.payment_status === 'Cancelled') {
     throw new ApiError(409, 'This booking has been cancelled.');
   }
 
+  // Bookings created under the retired categories (Regular / VIP / VVIP / tables)
+  // carry no price snapshot and can no longer be confirmed at their old price.
+  if (!booking.price_unit || booking.unit_price == null) {
+    throw new ApiError(
+      409,
+      'This booking was made under the retired ticket categories and prices and cannot be confirmed. Ask the customer to make a new booking and refund or reconcile the old payment manually.'
+    );
+  }
+
   const expectedAmount = Number(booking.amount_due || 0);
-  if (!expectedAmount) {
-    throw new ApiError(409, 'This booking has no valid amount due.');
+  if (!expectedAmount) throw new ApiError(409, 'This booking has no valid amount due.');
+
+  // ---- Payment amount validation ---------------------------------------
+  // Recompute the price from the snapshot saved at booking time and make sure
+  // the stored amount still matches it.
+  const recomputed = pricingService.expectedAmountForBooking(booking);
+  if (recomputed !== pricingService.round2(expectedAmount)) {
+    throw new ApiError(
+      409,
+      `Amount mismatch: this ${pricingService.labelFor(booking.ticket_type)} booking should cost GHS ${recomputed}, but the amount due is GHS ${expectedAmount}. Payment was not confirmed.`
+    );
+  }
+
+  // Optional: the admin may state the amount actually received in the MoMo account.
+  const received = req.body ? req.body.amountReceived : undefined;
+  if (received !== undefined && received !== null && received !== '') {
+    const receivedNum = Number(received);
+    if (!Number.isFinite(receivedNum) || pricingService.round2(receivedNum) !== pricingService.round2(expectedAmount)) {
+      throw new ApiError(
+        409,
+        `Amount mismatch: GHS ${received} was reported received, but this booking requires exactly GHS ${expectedAmount}. Payment was not confirmed.`
+      );
+    }
   }
 
   Booking.confirmManualPayment(booking.booking_id, expectedAmount);
@@ -123,115 +162,74 @@ const confirmPayment = asyncHandler(async (req, res) => {
   });
 
   let updatedBooking = Booking.getByBookingId(booking.booking_id);
+  let attendeeTickets = [];
   let ticketGenerated = false;
   let emailSent = false;
-  let freeTickets = [];
 
-  // Generate the table's primary reservation ticket and its included
-  // free-entry tickets only after payment is verified.
+  // One ticket (own unique ID, own PDF) per admitted person, issued only now.
   try {
-    const pdfPath = await pdfService.generateTicketPdf(updatedBooking);
-    Booking.setTicketPdfPath(updatedBooking.booking_id, pdfPath);
-    ticketGenerated = true;
+    attendeeTickets = await attendeeService.issueAttendeeTickets(updatedBooking);
+    updatedBooking = Booking.getByBookingId(updatedBooking.booking_id);
+    ticketGenerated = attendeeTickets.length > 0 && attendeeTickets.every((t) => t.ticket_pdf_path);
 
-    if (updatedBooking.table_package) {
-      const pkg = tablesConfig.packages.find((p) => p.key === updatedBooking.table_package);
-      const freeCount = Number(pkg?.freeTickets || 0);
-      freeTickets = FreeTicket.listByBookingId(updatedBooking.booking_id);
-
-      while (freeTickets.length < freeCount) {
-        let ticketId;
-        do {
-          ticketId = generateFreeTicketId();
-        } while (FreeTicket.getByTicketId(ticketId));
-
-        FreeTicket.create({
-          booking_id: updatedBooking.booking_id,
-          ticket_id: ticketId,
-          guest_name: 'Table Guest',
-        });
-        freeTickets = FreeTicket.listByBookingId(updatedBooking.booking_id);
-      }
-
-      const freePdfPaths = [];
-      for (const freeTicket of freeTickets) {
-        if (!freeTicket.ticket_pdf_path) {
-          const freePdf = await pdfService.generateFreeTicketPdf(
-            { ...freeTicket, is_free_ticket: true },
-            { ...updatedBooking, is_free_ticket: true }
-          );
-          FreeTicket.setPdfPath(freeTicket.ticket_id, freePdf);
-        }
-      }
-      freeTickets = FreeTicket.listByBookingId(updatedBooking.booking_id);
-
-      updatedBooking = {
-        ...Booking.getByBookingId(updatedBooking.booking_id),
-        included_free_tickets: freeTickets.length,
-      };
-
-      for (const freeTicket of freeTickets) {
-        if (freeTicket.ticket_pdf_path) freePdfPaths.push(freeTicket.ticket_pdf_path);
-      }
-
+    if (ticketGenerated) {
       const emailResult = await emailService.sendBookingConfirmation(
         updatedBooking,
-        pdfPath,
-        freePdfPaths
+        attendeeTickets.map((t) => t.ticket_pdf_path)
       );
-      Booking.setEmailSent(updatedBooking.booking_id, emailResult.sent);
-      emailSent = emailResult.sent;
-    } else {
-      const emailResult = await emailService.sendBookingConfirmation(updatedBooking, pdfPath);
       Booking.setEmailSent(updatedBooking.booking_id, emailResult.sent);
       emailSent = emailResult.sent;
     }
   } catch (err) {
     console.error(`Ticket generation failed for ${updatedBooking.booking_id}:`, err.message);
+    attendeeTickets = AttendeeTicket.listByBookingId(updatedBooking.booking_id);
   }
 
   res.json({
     success: true,
     message: ticketGenerated
       ? (emailSent
-          ? 'Payment confirmed and ticket(s) emailed.'
-          : 'Payment confirmed and ticket(s) generated.')
-      : 'Payment confirmed, but ticket generation needs another attempt.',
-    booking: Booking.getByBookingId(updatedBooking.booking_id),
-    freeTickets: FreeTicket.listByBookingId(updatedBooking.booking_id),
+          ? `Payment confirmed and ${attendeeTickets.length} ticket(s) emailed.`
+          : `Payment confirmed and ${attendeeTickets.length} ticket(s) generated.`)
+      : 'Payment confirmed, but ticket generation needs another attempt (use Resend Ticket).',
+    booking: present(Booking.getByBookingId(updatedBooking.booking_id)),
+    attendeeTickets,
   });
-} );
+});
 
-/** POST /api/admin/checkin — marks a primary or included free ticket as checked in */
+/** POST /api/admin/checkin — marks one ticket as checked in */
 const checkIn = asyncHandler(async (req, res) => {
   const { ticketId } = req.body;
   if (!ticketId) throw new ApiError(400, 'ticketId is required.');
+  const id = String(ticketId).trim();
 
-  const id = ticketId.trim();
+  // Each attendee is checked in on their own, atomically, so a ticket can never be
+  // admitted twice even if scanned at two gates at once.
+  const attendee = AttendeeTicket.getByTicketId(id);
+  if (attendee) {
+    const parent = Booking.getByBookingId(attendee.booking_id);
+    if (!parent || parent.payment_status !== 'Paid') {
+      throw new ApiError(409, 'Cannot check in a ticket whose booking has not been paid.');
+    }
+    if (!AttendeeTicket.checkIn(id)) {
+      throw new ApiError(409, 'This ticket has already been checked in.', { attendeeTicket: AttendeeTicket.getByTicketId(id) });
+    }
+    return res.json({
+      success: true,
+      ticketType: 'attendee',
+      booking: present(parent),
+      attendeeTicket: AttendeeTicket.getByTicketId(id),
+      attendeeSummary: AttendeeTicket.summaryForBooking(parent.booking_id),
+    });
+  }
+
+  // Single tickets issued by older versions of the site.
   const booking = Booking.getByTicketId(id);
-  if (booking) {
-    if (booking.payment_status !== 'Paid') throw new ApiError(409, 'Cannot check in a ticket that has not been paid.');
-    if (booking.checked_in) throw new ApiError(409, 'This ticket has already been checked in.', { booking });
-    Booking.setCheckedIn(id);
-    return res.json({ success: true, ticketType: 'primary', booking: Booking.getByTicketId(id) });
-  }
-
-  const freeTicket = FreeTicket.getByTicketId(id);
-  if (!freeTicket) throw new ApiError(404, `No ticket found for "${id}".`);
-  const parent = Booking.getByBookingId(freeTicket.booking_id);
-  if (!parent || parent.payment_status !== 'Paid') {
-    throw new ApiError(409, 'This free ticket is linked to an unpaid table reservation.');
-  }
-  if (freeTicket.checked_in) throw new ApiError(409, 'This free ticket has already been checked in.', { freeTicket });
-
-  FreeTicket.setCheckedIn(id);
-  res.json({ success: true, ticketType: 'table_free', booking: parent, freeTicket: FreeTicket.getByTicketId(id) });
-});
-
-/** GET /api/admin/tables — full floor plan for the admin dashboard */
-const tableFloor = asyncHandler(async (req, res) => {
-  const tables = TableModel.getAllTables();
-  res.json({ success: true, tables });
+  if (!booking) throw new ApiError(404, `No ticket found for "${id}".`);
+  if (booking.payment_status !== 'Paid') throw new ApiError(409, 'Cannot check in a ticket that has not been paid.');
+  if (booking.checked_in) throw new ApiError(409, 'This ticket has already been checked in.', { booking: present(booking) });
+  Booking.setCheckedIn(id);
+  res.json({ success: true, ticketType: 'primary', booking: present(Booking.getByTicketId(id)) });
 });
 
 /** GET /api/admin/export/guest-list — streams a fresh .xlsx download */
@@ -240,17 +238,28 @@ const exportGuestList = asyncHandler(async (req, res) => {
   res.download(filePath, path.basename(filePath));
 });
 
-/** POST /api/admin/bookings/:bookingId/resend-ticket — regenerate PDF + resend email */
+/** POST /api/admin/bookings/:bookingId/resend-ticket — regenerate PDFs + resend email */
 const resendTicket = asyncHandler(async (req, res) => {
   const booking = Booking.getByBookingId(req.params.bookingId);
   if (!booking) throw new ApiError(404, 'Booking not found.');
   if (booking.payment_status !== 'Paid') throw new ApiError(409, 'Booking has not been paid; no ticket to send.');
 
+  if (attendeeService.usesAttendeeTickets(booking)) {
+    const tickets = await attendeeService.issueAttendeeTickets(booking, { regeneratePdfs: true });
+    const refreshed = Booking.getByBookingId(booking.booking_id);
+    const sent = await emailService.sendBookingConfirmation(refreshed, tickets.map((t) => t.ticket_pdf_path));
+    Booking.setEmailSent(booking.booking_id, sent.sent);
+    return res.json({
+      success: true,
+      message: sent.sent ? `${tickets.length} ticket(s) resent.` : `${tickets.length} ticket(s) regenerated but SMTP is not configured.`,
+    });
+  }
+
+  // Older single-ticket booking.
   const pdfPath = await pdfService.generateTicketPdf(booking);
   Booking.setTicketPdfPath(booking.booking_id, pdfPath);
-  const result = await emailService.sendBookingConfirmation(booking, pdfPath);
+  const result = await emailService.sendBookingConfirmation(booking, [pdfPath]);
   Booking.setEmailSent(booking.booking_id, result.sent);
-
   res.json({ success: true, message: result.sent ? 'Ticket resent.' : 'Ticket regenerated but SMTP is not configured.' });
 });
 
@@ -262,7 +271,6 @@ module.exports = {
   getBooking,
   verifyTicket,
   checkIn,
-  tableFloor,
   exportGuestList,
   resendTicket,
   confirmPayment,

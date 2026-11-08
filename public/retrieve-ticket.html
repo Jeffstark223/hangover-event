@@ -348,7 +348,7 @@
 
 
         <div
-          id="freeTicketsBox"
+          id="attendeeTicketsBox"
           class="free-tickets"
         ></div>
 
@@ -404,8 +404,8 @@
   const downloadBtn =
     document.getElementById('downloadBtn');
 
-  const freeTicketsBox =
-    document.getElementById('freeTicketsBox');
+  const attendeeTicketsBox =
+    document.getElementById('attendeeTicketsBox');
 
   const findBtn =
     document.getElementById('findBtn');
@@ -463,11 +463,14 @@
       downloadBtn.style.display =
         'none';
 
-      freeTicketsBox.style.display =
+      attendeeTicketsBox.style.display =
         'none';
 
-      freeTicketsBox.innerHTML =
+      attendeeTicketsBox.innerHTML =
         '';
+
+      downloadBtn.textContent =
+        'Download My Ticket';
 
       findBtn.disabled =
         true;
@@ -534,7 +537,7 @@
           <br>
 
           <strong>Ticket:</strong>
-          ${escapeHtml(booking.ticketType)}
+          ${escapeHtml(booking.ticketLabel || booking.ticketType)}
 
           <br>
 
@@ -587,99 +590,86 @@
 
 
           /*
-           * INCLUDED FREE TICKETS
+           * ONE TICKET PER PERSON (Group of 6, Guys, Girls, Late Bird, VIP, VVIP)
+           * Ticket 1 is the main download button above; tickets 2..N are listed here.
            */
 
           if (
             Array.isArray(
-              booking.freeTickets
+              booking.attendeeTickets
             ) &&
-            booking.freeTickets.length >
-              0
+            booking.attendeeTickets.length >
+              1
           ) {
 
-            const availableFreeTickets =
-              booking.freeTickets.filter(
-                (ticket) =>
-                  ticket.ticketAvailable
-              );
+            const total =
+              booking.attendeeTickets.length;
 
+            downloadBtn.textContent =
+              `Download Ticket 1 of ${total}`;
 
-            if (
-              availableFreeTickets.length >
-              0
-            ) {
+            const others =
+              booking.attendeeTickets
+                .slice(1)
+                .filter(
+                  (ticket) =>
+                    ticket.ticketAvailable
+                );
 
-              freeTicketsBox.innerHTML = `
+            attendeeTicketsBox.innerHTML = `
 
-                <h3>
-                  Included Free Guest Tickets
-                </h3>
+              <h3>
+                Your Other Tickets
+              </h3>
 
-                <p class="free-tickets-description">
+              <p class="free-tickets-description">
+                Your booking has ${total} separate tickets,
+                one for each person. Each ticket has its own
+                unique ID and can only be used once.
+                Share each ticket with the person it is for.
+              </p>
 
-                  Your table reservation includes
-                  ${availableFreeTickets.length}
-                  free guest ticket${availableFreeTickets.length === 1 ? '' : 's'}.
+              ${others
+                .map(
+                  (ticket) => `
 
-                  Each ticket has its own unique ID.
+                    <div class="free-ticket-item">
 
-                </p>
+                      <div class="free-ticket-info">
 
-
-                ${availableFreeTickets
-                  .map(
-                    (ticket, index) => `
-
-                      <div
-                        class="free-ticket-item"
-                      >
-
-                        <div
-                          class="free-ticket-info"
-                        >
-
-                          <div
-                            class="free-ticket-title"
-                          >
-                            Free Guest Ticket
-                            ${index + 1}
-                          </div>
-
-                          <div
-                            class="free-ticket-id"
-                          >
-                            ${escapeHtml(
-                              ticket.ticketId
-                            )}
-                          </div>
-
+                        <div class="free-ticket-title">
+                          Ticket
+                          ${escapeHtml(ticket.attendeeNumber)}
+                          of
+                          ${escapeHtml(ticket.attendeeTotal)}
                         </div>
 
-
-                        <a
-                          href="/api/bookings/free-ticket/${encodeURIComponent(
-                            ticket.ticketId
-                          )}"
-                          class="free-ticket-download"
-                          target="_blank"
-                        >
-                          Download
-                        </a>
+                        <div class="free-ticket-id">
+                          ${escapeHtml(ticket.ticketId)}
+                        </div>
 
                       </div>
 
-                    `
-                  )
-                  .join('')}
+                      <a
+                        href="/api/bookings/attendee-ticket/${encodeURIComponent(
+                          ticket.ticketId
+                        )}"
+                        class="free-ticket-download"
+                        target="_blank"
+                      >
+                        Download
+                      </a>
 
-              `;
+                    </div>
 
+                  `
+                )
+                .join('')}
 
-              freeTicketsBox.style.display =
-                'block';
+            `;
 
-            }
+            attendeeTicketsBox.style.display =
+              'block';
 
           }
 
@@ -741,10 +731,10 @@
         downloadBtn.style.display =
           'none';
 
-        freeTicketsBox.style.display =
+        attendeeTicketsBox.style.display =
           'none';
 
-        freeTicketsBox.innerHTML =
+        attendeeTicketsBox.innerHTML =
           '';
 
       }
